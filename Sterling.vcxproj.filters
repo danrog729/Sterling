@@ -43,5 +43,8 @@
     <ClInclude Include="include\KHR\khrplatform.h">
       <Filter>Libraries</Filter>
     </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
