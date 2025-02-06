@@ -40,4 +40,12 @@ static int sterling_create_glfw_window(GLFWwindow** target, int width, int heigh
 /// <returns>0 if successful</returns>
 static inline int sterling_initialise_glad();
 
+/// <summary>
+/// Callback for changing the size of the window. Sets the OpenGL Viewport to be the new size.
+/// </summary>
+/// <param name="window">Pointer to the GLFW window</param>
+/// <param name="width">The new width</param>
+/// <param name="height">The new height</param>
+static void sterling_framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
 #endif
