@@ -132,6 +132,7 @@
     <ClCompile Include="libs\glad.c" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\maths.cpp" />
+    <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\shaders.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -142,9 +143,9 @@
     <ClInclude Include="include\GLFW\glfw3.h" />
     <ClInclude Include="include\GLFW\glfw3native.h" />
     <ClInclude Include="include\KHR\khrplatform.h" />
-    <ClInclude Include="main.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="src\maths.h" />
+    <ClInclude Include="src\scene.h" />
     <ClInclude Include="src\shaders.h" />
   </ItemGroup>
   <ItemGroup>

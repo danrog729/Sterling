@@ -1,5 +1,9 @@
 #include "maths.h"
 
+/*
+Matrix (4x4 float)
+*/
+
 maths::mat4f::mat4f(
 	float M11, float M12, float M13, float M14,
 	float M21, float M22, float M23, float M24,
@@ -13,17 +17,101 @@ maths::mat4f::mat4f(
 	m41 = M41; m42 = M42; m43 = M43; m44 = M44;
 }
 
-maths::mat4f maths::mat4f::operator+(mat4f &matrix)
+maths::mat4f maths::mat4f::operator+()
 {
-	return matrix;
+	return *this;
 }
 
-maths::mat4f maths::mat4f::operator-(mat4f &matrix)
+maths::mat4f maths::mat4f::operator-()
 {
 	return mat4f(
-		-matrix.m11, -matrix.m12, -matrix.m13, -matrix.m14,
-		-matrix.m21, -matrix.m22, -matrix.m23, -matrix.m24,
-		-matrix.m31, -matrix.m32, -matrix.m33, -matrix.m34,
-		-matrix.m41, -matrix.m42, -matrix.m43, -matrix.m44
+		-m11, -m12, -m13, -m14,
+		-m21, -m22, -m23, -m24,
+		-m31, -m32, -m33, -m34,
+		-m41, -m42, -m43, -m44
 	);
+}
+
+maths::mat4f maths::mat4f::operator+(const mat4f& matrix)
+{
+	return mat4f(
+		m11 + matrix.m11, m12 + matrix.m12, m13 + matrix.m13, m14 + matrix.m14,
+		m21 + matrix.m21, m22 + matrix.m22, m23 + matrix.m23, m24 + matrix.m24,
+		m31 + matrix.m31, m32 + matrix.m32, m33 + matrix.m33, m34 + matrix.m34,
+		m41 + matrix.m41, m42 + matrix.m42, m43 + matrix.m43, m44 + matrix.m44
+	);
+}
+
+maths::mat4f maths::mat4f::operator-(const mat4f &matrix)
+{
+	return mat4f(
+		m11 - matrix.m11, m12 - matrix.m12, m13 - matrix.m13, m14 - matrix.m14,
+		m21 - matrix.m21, m22 - matrix.m22, m23 - matrix.m23, m24 - matrix.m24,
+		m31 - matrix.m31, m32 - matrix.m32, m33 - matrix.m33, m34 - matrix.m34,
+		m41 - matrix.m41, m42 - matrix.m42, m43 - matrix.m43, m44 - matrix.m44
+	);
+}
+
+maths::mat4f maths::mat4f::operator*(const mat4f& matrix)
+{
+	return mat4f(
+		m11 * matrix.m11 + m12 * matrix.m21 + m13 * matrix.m31 + m14 * matrix.m41,
+		m11 * matrix.m12 + m12 * matrix.m22 + m13 * matrix.m32 + m14 * matrix.m42,
+		m11 * matrix.m13 + m12 * matrix.m23 + m13 * matrix.m33 + m14 * matrix.m43,
+		m11 * matrix.m14 + m12 * matrix.m24 + m13 * matrix.m34 + m14 * matrix.m44,
+
+		m21 * matrix.m11 + m22 * matrix.m21 + m23 * matrix.m31 + m24 * matrix.m41,
+		m21 * matrix.m12 + m22 * matrix.m22 + m23 * matrix.m32 + m24 * matrix.m42,
+		m21 * matrix.m13 + m22 * matrix.m23 + m23 * matrix.m33 + m24 * matrix.m43,
+		m21 * matrix.m14 + m22 * matrix.m24 + m23 * matrix.m34 + m24 * matrix.m44,
+
+		m31 * matrix.m11 + m32 * matrix.m21 + m33 * matrix.m31 + m34 * matrix.m41,
+		m31 * matrix.m12 + m32 * matrix.m22 + m33 * matrix.m32 + m34 * matrix.m42,
+		m31 * matrix.m13 + m32 * matrix.m23 + m33 * matrix.m33 + m34 * matrix.m43,
+		m31 * matrix.m14 + m32 * matrix.m24 + m33 * matrix.m34 + m34 * matrix.m44,
+
+		m41 * matrix.m11 + m42 * matrix.m21 + m43 * matrix.m31 + m44 * matrix.m41,
+		m41 * matrix.m12 + m42 * matrix.m22 + m43 * matrix.m32 + m44 * matrix.m42,
+		m41 * matrix.m13 + m42 * matrix.m23 + m43 * matrix.m33 + m44 * matrix.m43,
+		m41 * matrix.m14 + m42 * matrix.m24 + m43 * matrix.m34 + m44 * matrix.m44
+	);
+}
+
+maths::vec4f maths::mat4f::operator*(const vec4f& vector)
+{
+	return vec4f(
+		m11 * vector.x + m12 * vector.y + m13 * vector.z + m14 * vector.w,
+		m21 * vector.x + m22 * vector.y + m23 * vector.z + m24 * vector.w,
+		m31 * vector.x + m32 * vector.y + m33 * vector.z + m34 * vector.w,
+		m41 * vector.x + m42 * vector.y + m43 * vector.z + m44 * vector.w
+	);
+}
+
+maths::mat4f maths::mat4f::stretch_z(float stretch)
+{
+	return maths::mat4f(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, stretch, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+
+/*
+Quaternion
+*/
+
+maths::mat4f maths::unit_quaternion::to_rotation_matrix()
+{
+	return mat4f(
+		1 - 2 * (j * j + k * k), 2 * (i * j - k * r), 2 * (i * k + j * r), 0,
+		2 * (i * j + k * r), 1 - 2 * (i * i + k * k), 2 * (j * k - i * r), 0,
+		2 * (i * k - j * r), 2 * (j * k + i * r), 1 - 2 * (i * i + j * j), 0,
+		0, 0, 0, 1
+	);
+}
+
+maths::unit_quaternion maths::unit_quaternion::complement()
+{
+	return unit_quaternion(r, -i, -j, -k);
 }

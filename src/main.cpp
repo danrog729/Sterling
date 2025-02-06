@@ -5,6 +5,10 @@
 
 #include "main.h"
 #include "shaders.h"
+#include "maths.h"
+#include "scene.h"
+
+Camera* camera;
 
 int main()
 {
@@ -80,6 +84,9 @@ int main()
 	// set up the shader
 	Shader* shader = new Shader("shaders/vertex.vert", "shaders/fragment.frag");
 
+	// Set up the camera
+	camera = new Camera(maths::vec3f(0.0f, 0.0f, 3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::PI / 3.0f, 0.1, 10.0f, 800.0f / 600.0f);
+
 	// Render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -87,8 +94,12 @@ int main()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		// calculate the transformation matrix
+		maths::mat4f worldToScreenMatrix = camera->orthographic_matrix() * camera->perspective_matrix() * maths::mat4f::stretch_z(-1.0f) * camera->cameraspace_matrix();
+
 		// render cube
 		shader->use();
+		shader->setMat4f("worldToScreen", worldToScreenMatrix);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -147,4 +158,5 @@ static inline int sterling_initialise_glad()
 static void sterling_framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	camera->aspectRatio = ((float)width / height);
 }

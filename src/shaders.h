@@ -8,6 +8,8 @@
 #include <sstream>
 #include <iostream>
 
+#include "maths.h"
+
 class Shader
 {
 public:
@@ -48,6 +50,12 @@ public:
 	/// <param name="name">: The identifier of the vector4 inside the shader code</param>
 	/// <param name="value">: The values to give the vector4</param>
 	void setVec4f(const std::string& name, float x, float y, float z, float w) const;
+	/// <summary>
+	/// Sets a matrix4 of floats inside the shader
+	/// </summary>
+	/// <param name="name">: The identifier of the matrix4 inside the shader code</param>
+	/// <param name="value">: The values to give the matrix4</param>
+	void setMat4f(const std::string& name, maths::mat4f) const;
 };
 
 #endif
