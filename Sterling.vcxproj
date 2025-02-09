@@ -149,6 +149,10 @@
     <ClInclude Include="src\shaders.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="models\axes.mdl" />
+    <None Include="models\camera.mdl" />
+    <None Include="models\cube.mdl" />
+    <None Include="models\plane.mdl" />
     <None Include="shaders\fragment.frag" />
     <None Include="shaders\vertex.vert" />
   </ItemGroup>

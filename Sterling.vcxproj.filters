@@ -19,6 +19,9 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{f6578846-c7ef-4ad9-bdc1-56e0f6d94024}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Models">
+      <UniqueIdentifier>{53e2a8f3-ff02-42c7-99d3-0d01731c53b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="libs\glad.c">
@@ -74,6 +77,18 @@
     </None>
     <None Include="shaders\fragment.frag">
       <Filter>Shaders</Filter>
+    </None>
+    <None Include="models\axes.mdl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\camera.mdl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\cube.mdl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\plane.mdl">
+      <Filter>Models</Filter>
     </None>
   </ItemGroup>
 </Project>

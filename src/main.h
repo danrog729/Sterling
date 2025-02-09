@@ -52,6 +52,6 @@ static void sterling_framebuffer_size_callback(GLFWwindow* window, int width, in
 /// Handles the logic for key presses
 /// </summary>
 /// <param name="window">The window that the key press happened on</param>
-static void sterling_process_inputs(GLFWwindow* window);
+static void sterling_process_inputs(GLFWwindow* window, float deltaTime);
 
 #endif

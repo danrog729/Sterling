@@ -49,58 +49,27 @@ int main()
 	// Set the framebuffer size callback
 	glfwSetFramebufferSizeCallback(window, sterling_framebuffer_size_callback);
 
-	// Create the model
-	float vertices[] = {
-		-1.0f, -1.0f, -1.0f, // // //
-		-1.0f, -1.0f,  1.0f, // //    //
-		-1.0f,  1.0f, -1.0f, //    // //
-		-1.0f,  1.0f,  1.0f,          //
-		 1.0f, -1.0f, -1.0f,    // //
-		 1.0f, -1.0f,  1.0f,
-		 1.0f,  1.0f, -1.0f,
-		 1.0f,  1.0f,  1.0f
-	};
-	int faces[] = {
-		0,2,1,
-		0,1,4,
-		0,4,2,
-		1,2,3,
-		1,3,5,
-		1,5,4,
-		2,6,3,
-		2,4,6,
-		3,7,5,
-		3,6,7,
-		4,5,6,
-		5,7,6
-	};
-	unsigned int VAO, VBO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(faces), faces, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glBindVertexArray(0);
-
 	// set up the shader
 	Shader* shader = new Shader("shaders/vertex.vert", "shaders/fragment.frag");
 
 	// Set up the camera
 	camera = new Camera(maths::vec3f(0.0f, 0.0f, 3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f);
 
+	Axes* axes = new Axes(maths::vec3f(0.0f, 0.0f, 3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f));
+	Camera* dummyCam = new Camera(maths::vec3f(0.0f, 0.0f, -3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f);
+	Cube* cube = new Cube(maths::vec3f(0.0f, 0.0f, 0.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f));
+	Plane* plane = new Plane(maths::vec3f(0.0f, 5.0f, 0.0f), maths::unit_quaternion(0.866025403784f, 0.333333333333f, 0.333333333333f, 0.333333333333f), maths::vec3f(1.0f, 1.0f, 1.0f));
+
 	// Render loop
+	double previousTime = 0;
 	while (!glfwWindowShouldClose(window))
 	{
-		// process inputs
-		sterling_process_inputs(window);
+		// Calculate delta time
+		double currentTime = glfwGetTime();
+		float deltaTime = (float)(currentTime - previousTime);
 
-		float magnitude = sqrtf(camera->rotation.r * camera->rotation.r + camera->rotation.i * camera->rotation.i + camera->rotation.j * camera->rotation.j + camera->rotation.k * camera->rotation.k);
-		std::cout << magnitude << "\n";
+		// process inputs
+		sterling_process_inputs(window, deltaTime);
 
 		// clear screen
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -111,14 +80,25 @@ int main()
 
 		// render cube
 		shader->use();
-		shader->setMat4f("worldToScreen", worldToScreenMatrix);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, sizeof(faces) / sizeof(int), GL_UNSIGNED_INT, 0);
+
+		shader->setMat4f("worldToScreen", worldToScreenMatrix * axes->local_to_world());
+		axes->render();
+
+		shader->setMat4f("worldToScreen", worldToScreenMatrix * dummyCam->local_to_world());
+		dummyCam->render();
+
+		shader->setMat4f("worldToScreen", worldToScreenMatrix * cube->local_to_world());
+		cube->render();
+
+		shader->setMat4f("worldToScreen", worldToScreenMatrix * plane->local_to_world());
+		plane->render();
 
 		// Swap buffers
 		glfwSwapBuffers(window);
 		// Poll events
 		glfwPollEvents();
+
+		previousTime = currentTime;
 	}
 
 	glfwTerminate();
@@ -127,15 +107,14 @@ int main()
 
 static void sterling_glfw_error_callback(int id, const char* description)
 {
-	std::cerr << "ERROR::GLFW::" << id << "::" << description << "\n";
+	throw "ERROR::GLFW::" + std::to_string(id) + "::" + description;
 }
 
 static inline int sterling_initialise_glfw(int majorVersion, int minorVersion, int profile)
 {
 	if (!glfwInit())
 	{
-		std::cerr << "ERROR::GLFW_INITIALISATION_FAILED";
-		return 1;
+		throw "ERROR::GLFW_INITIALISATION_FAILED";
 	}
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, majorVersion);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minorVersion);
@@ -148,9 +127,7 @@ static int sterling_create_glfw_window(GLFWwindow** target, int width, int heigh
 	GLFWwindow* window = glfwCreateWindow(width, height, title, monitor, share);
 	if (window == NULL)
 	{
-		std::cerr << "ERROR::GLFW::WINDOW_CREATION_FAILED" << std::endl;
-		glfwTerminate();
-		return -1;
+		throw "ERROR::GLFW::WINDOW_CREATION_FAILED";
 	}
 	glfwMakeContextCurrent(window);
 	*target = window;
@@ -161,8 +138,7 @@ static inline int sterling_initialise_glad()
 {
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cerr << "ERROR::GLAD_INITIALISATION_FAILED" << std::endl;
-		return -1;
+		throw "ERROR::GLAD_INITIALISATION_FAILED";
 	}
 	return 0;
 }
@@ -173,59 +149,59 @@ static void sterling_framebuffer_size_callback(GLFWwindow* window, int width, in
 	camera->aspectRatio = ((float)width / height);
 }
 
-static void sterling_process_inputs(GLFWwindow* window)
+static void sterling_process_inputs(GLFWwindow* window, float deltaTime)
 {
 	// camera movement
-	float cameraSpeed = 0.05f;
+	float cameraSpeed = 3.0f;
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->front() * cameraSpeed;
+		camera->position = camera->position + camera->front() * cameraSpeed * deltaTime;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->back() * cameraSpeed;
+		camera->position = camera->position + camera->back() * cameraSpeed * deltaTime;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->left() * cameraSpeed;
+		camera->position = camera->position + camera->left() * cameraSpeed * deltaTime;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->right() * cameraSpeed;
+		camera->position = camera->position + camera->right() * cameraSpeed * deltaTime;
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->up() * cameraSpeed;
+		camera->position = camera->position + camera->up() * cameraSpeed * deltaTime;
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->down() * cameraSpeed;
+		camera->position = camera->position + camera->down() * cameraSpeed * deltaTime;
 	}
 
 	// camera rotation
-	float cameraSensitivity = 0.01f;
+	float cameraSensitivity = 0.60f;
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->up()), cameraSensitivity) * camera->rotation).normalise();
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->up()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
 	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->down()), cameraSensitivity) * camera->rotation).normalise();
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->down()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->right()), cameraSensitivity) * camera->rotation).normalise();
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->right()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
 	}
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->left()), cameraSensitivity) * camera->rotation).normalise();
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->left()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
 	}
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->back()), cameraSensitivity) * camera->rotation).normalise();
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->back()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
 	}
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->front()), cameraSensitivity) * camera->rotation).normalise();
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->front()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
 	}
 }

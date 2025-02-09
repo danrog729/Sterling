@@ -129,7 +129,7 @@ maths::unit_quaternion maths::unit_quaternion::operator*(const unit_quaternion& 
 
 maths::unit_quaternion maths::unit_quaternion::from_axis_angle(maths::vec3f axis, float angle)
 {
-	return unit_quaternion(cosf(angle), axis.x * sinf(angle), axis.y * sinf(angle), axis.z * sinf(angle));
+	return unit_quaternion(cosf(angle), axis.x * sinf(angle), axis.y * sinf(angle), axis.z * sinf(angle)).normalise();
 }
 
 maths::mat4f maths::unit_quaternion::to_rotation_matrix()
