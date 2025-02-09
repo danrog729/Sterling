@@ -19,15 +19,15 @@ maths::mat4f Camera::cameraspace_matrix()
 		0.0f, 0.0f, 1.0f, -position.z,
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
-	maths::mat4f rotationMatrix = rotation.to_rotation_matrix();
+	maths::mat4f rotationMatrix = rotation.conjugate().to_rotation_matrix();
 	return rotationMatrix * locationMatrix;
 }
 
 maths::mat4f Camera::orthographic_matrix()
 {
 	return maths::mat4f(
-		1.0f / nearClip / tan(fov / 2.0f), 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f / nearClip / tan(fov / 2.0f) * aspectRatio, 0.0f, 0.0f,
+		1.0f / (nearClip * tanf(fov / 2.0f)), 0.0f, 0.0f, 0.0f,
+		0.0f, aspectRatio / (nearClip * tanf(fov / 2.0f)), 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f / (farClip - nearClip), -nearClip / (farClip - nearClip),
 		0.0f, 0.0f, 0.0f, 1.0f
 	);

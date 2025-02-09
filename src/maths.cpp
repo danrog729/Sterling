@@ -1,4 +1,6 @@
 #include "maths.h"
+#include <math.h>
+#include <iostream>
 
 /*
 Vector (3 float)
@@ -11,7 +13,7 @@ maths::vec3f maths::vec3f::operator*(float value)
 
 maths::vec3f maths::vec3f::operator+(const vec3f& vector)
 {
-	return maths::vec3f(x + vector.x, y * vector.y, z * vector.z);
+	return maths::vec3f(x + vector.x, y + vector.y, z + vector.z);
 }
 
 /*
@@ -115,6 +117,21 @@ maths::mat4f maths::mat4f::stretch_z(float stretch)
 Quaternion
 */
 
+maths::unit_quaternion maths::unit_quaternion::operator*(const unit_quaternion& quat)
+{
+	return unit_quaternion(
+		r * quat.r - i * quat.i - j * quat.j - k * quat.k,
+		i * quat.r + r * quat.i - k * quat.j + j * quat.k,
+		j * quat.r - k * quat.i + r * quat.j + i * quat.k,
+		k * quat.r - j * quat.i + i * quat.j + r * quat.k
+	);
+}
+
+maths::unit_quaternion maths::unit_quaternion::from_axis_angle(maths::vec3f axis, float angle)
+{
+	return unit_quaternion(cosf(angle), axis.x * sinf(angle), axis.y * sinf(angle), axis.z * sinf(angle));
+}
+
 maths::mat4f maths::unit_quaternion::to_rotation_matrix()
 {
 	return mat4f(
@@ -125,7 +142,13 @@ maths::mat4f maths::unit_quaternion::to_rotation_matrix()
 	);
 }
 
-maths::unit_quaternion maths::unit_quaternion::complement()
+maths::unit_quaternion maths::unit_quaternion::normalise()
+{
+	float magnitude = sqrtf(r * r + i * i + j * j + k * k);
+	return unit_quaternion(r / magnitude, i / magnitude, j / magnitude, k / magnitude);
+}
+
+maths::unit_quaternion maths::unit_quaternion::conjugate()
 {
 	return unit_quaternion(r, -i, -j, -k);
 }

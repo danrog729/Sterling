@@ -3,7 +3,7 @@
 
 namespace maths
 {
-	const float PI = 3.141592653589;
+	const float PI = 3.141592653589f;
 
 	struct vec3f
 	{
@@ -84,9 +84,15 @@ namespace maths
 			k = K;
 		}
 
+		unit_quaternion operator*(const unit_quaternion& quat);
+
+		static unit_quaternion from_axis_angle(maths::vec3f axis, float angle);
+
 		mat4f to_rotation_matrix();
 
-		unit_quaternion complement();
+		unit_quaternion normalise();
+
+		unit_quaternion conjugate();
 	};
 }
 

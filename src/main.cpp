@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include "../include/glad/glad.h"
 #include "../include/GLFW/glfw3.h"
@@ -12,6 +13,13 @@ Camera* camera;
 
 int main()
 {
+#ifdef _DEBUG
+	// wait for user input
+	std::cout << "Type anything and press enter to start (For connection to RenderDoc): ";
+	std::string enter;
+	std::cin >> enter;
+#endif
+
 	// Set up GLFW error handling and initialise GLFW
 	glfwSetErrorCallback(sterling_glfw_error_callback);
 	if (sterling_initialise_glfw(4, 6, GLFW_OPENGL_CORE_PROFILE) != 0)
@@ -43,11 +51,11 @@ int main()
 
 	// Create the model
 	float vertices[] = {
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f,  1.0f,
-		-1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f,  1.0f,
-		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f, // // //
+		-1.0f, -1.0f,  1.0f, // //    //
+		-1.0f,  1.0f, -1.0f, //    // //
+		-1.0f,  1.0f,  1.0f,          //
+		 1.0f, -1.0f, -1.0f,    // //
 		 1.0f, -1.0f,  1.0f,
 		 1.0f,  1.0f, -1.0f,
 		 1.0f,  1.0f,  1.0f
@@ -75,23 +83,24 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(faces), faces, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
 
 	// set up the shader
 	Shader* shader = new Shader("shaders/vertex.vert", "shaders/fragment.frag");
 
 	// Set up the camera
-	camera = new Camera(maths::vec3f(0.0f, 0.0f, 10.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::PI / 3.0f, 0.1, 10.0f, 800.0f / 600.0f);
+	camera = new Camera(maths::vec3f(0.0f, 0.0f, 3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f);
 
 	// Render loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// process inputs
 		sterling_process_inputs(window);
+
+		float magnitude = sqrtf(camera->rotation.r * camera->rotation.r + camera->rotation.i * camera->rotation.i + camera->rotation.j * camera->rotation.j + camera->rotation.k * camera->rotation.k);
+		std::cout << magnitude << "\n";
 
 		// clear screen
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -104,7 +113,7 @@ int main()
 		shader->use();
 		shader->setMat4f("worldToScreen", worldToScreenMatrix);
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, sizeof(faces) / sizeof(int), GL_UNSIGNED_INT, 0);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -166,7 +175,8 @@ static void sterling_framebuffer_size_callback(GLFWwindow* window, int width, in
 
 static void sterling_process_inputs(GLFWwindow* window)
 {
-	float cameraSpeed = 0.5f;
+	// camera movement
+	float cameraSpeed = 0.05f;
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		camera->position = camera->position + camera->front() * cameraSpeed;
@@ -182,5 +192,40 @@ static void sterling_process_inputs(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		camera->position = camera->position + camera->right() * cameraSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	{
+		camera->position = camera->position + camera->up() * cameraSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	{
+		camera->position = camera->position + camera->down() * cameraSpeed;
+	}
+
+	// camera rotation
+	float cameraSensitivity = 0.01f;
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->up()), cameraSensitivity) * camera->rotation).normalise();
+	}
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->down()), cameraSensitivity) * camera->rotation).normalise();
+	}
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->right()), cameraSensitivity) * camera->rotation).normalise();
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->left()), cameraSensitivity) * camera->rotation).normalise();
+	}
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->back()), cameraSensitivity) * camera->rotation).normalise();
+	}
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->front()), cameraSensitivity) * camera->rotation).normalise();
 	}
 }
