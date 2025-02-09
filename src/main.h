@@ -48,4 +48,10 @@ static inline int sterling_initialise_glad();
 /// <param name="height">The new height</param>
 static void sterling_framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
+/// <summary>
+/// Handles the logic for key presses
+/// </summary>
+/// <param name="window">The window that the key press happened on</param>
+static void sterling_process_inputs(GLFWwindow* window);
+
 #endif

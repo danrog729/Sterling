@@ -19,6 +19,9 @@ namespace maths
 			y = Y;
 			z = Z;
 		}
+
+		vec3f operator*(float value);
+		vec3f operator+(const vec3f& vector);
 	};
 
 	struct vec4f

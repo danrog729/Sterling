@@ -42,3 +42,39 @@ maths::mat4f Camera::perspective_matrix()
 		0.0f, 0.0f, 1.0f, 0.0f
 	);
 }
+
+maths::vec3f Camera::front()
+{
+	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(0.0f, 0.0f, -1.0f, 0.0f);
+	return maths::vec3f(vector4.x, vector4.y, vector4.z);
+}
+
+maths::vec3f Camera::back()
+{
+	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(0.0f, 0.0f, 1.0f, 0.0f);
+	return maths::vec3f(vector4.x, vector4.y, vector4.z);
+}
+
+maths::vec3f Camera::left()
+{
+	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(-1.0f, 0.0f, 0.0f, 0.0f);
+	return maths::vec3f(vector4.x, vector4.y, vector4.z);
+}
+
+maths::vec3f Camera::right()
+{
+	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(1.0f, 0.0f, 0.0f, 0.0f);
+	return maths::vec3f(vector4.x, vector4.y, vector4.z);
+}
+
+maths::vec3f Camera::up()
+{
+	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(0.0f, 1.0f, 0.0f, 0.0f);
+	return maths::vec3f(vector4.x, vector4.y, vector4.z);
+}
+
+maths::vec3f Camera::down()
+{
+	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(0.0f, -1.0f, 0.0f, 0.0f);
+	return maths::vec3f(vector4.x, vector4.y, vector4.z);
+}

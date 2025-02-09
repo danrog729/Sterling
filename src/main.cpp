@@ -85,11 +85,14 @@ int main()
 	Shader* shader = new Shader("shaders/vertex.vert", "shaders/fragment.frag");
 
 	// Set up the camera
-	camera = new Camera(maths::vec3f(0.0f, 0.0f, 3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::PI / 3.0f, 0.1, 10.0f, 800.0f / 600.0f);
+	camera = new Camera(maths::vec3f(0.0f, 0.0f, 10.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::PI / 3.0f, 0.1, 10.0f, 800.0f / 600.0f);
 
 	// Render loop
 	while (!glfwWindowShouldClose(window))
 	{
+		// process inputs
+		sterling_process_inputs(window);
+
 		// clear screen
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -159,4 +162,25 @@ static void sterling_framebuffer_size_callback(GLFWwindow* window, int width, in
 {
 	glViewport(0, 0, width, height);
 	camera->aspectRatio = ((float)width / height);
+}
+
+static void sterling_process_inputs(GLFWwindow* window)
+{
+	float cameraSpeed = 0.5f;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		camera->position = camera->position + camera->front() * cameraSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		camera->position = camera->position + camera->back() * cameraSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		camera->position = camera->position + camera->left() * cameraSpeed;
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		camera->position = camera->position + camera->right() * cameraSpeed;
+	}
 }

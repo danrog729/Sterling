@@ -18,6 +18,13 @@ public:
 	maths::mat4f cameraspace_matrix();
 	maths::mat4f orthographic_matrix();
 	maths::mat4f perspective_matrix();
+
+	maths::vec3f front();
+	maths::vec3f back();
+	maths::vec3f left();
+	maths::vec3f right();
+	maths::vec3f up();
+	maths::vec3f down();
 };
 
 #endif
