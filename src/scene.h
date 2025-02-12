@@ -2,6 +2,67 @@
 #define STERLING_SCENE_H
 
 #include "maths.h"
+#include "shaders.h"
+
+class Scene;
+class ObjectList;
+struct Mesh;
+class Object;
+class Empty;
+class Camera;
+class Axes;
+class Model;
+class Cube;
+class Plane;
+
+class Scene
+{
+private:
+	void render_branch(Object* branch, maths::mat4f parentToScreen);
+public:
+	Camera* activeCamera;
+	ObjectList* children;
+
+	Scene(Camera* activeCam);
+
+	void render();
+};
+
+class ObjectList
+{
+private:
+	Object** data;
+public:
+	int count;
+	int capacity;
+
+	ObjectList();
+
+	Object* operator[](int index);
+
+	/// <summary>
+	/// Add an object to the end of the list
+	/// </summary>
+	/// <param name="object">The object to add</param>
+	void add(Object* object);
+	/// <summary>
+	/// Insert an object at a specific index
+	/// </summary>
+	/// <param name="object">The object to insert</param>
+	/// <param name="index">The index to insert it at</param>
+	void insert(Object* object, int index);
+
+	/// <summary>
+	/// Remove an object at a specific index
+	/// </summary>
+	/// <param name="index">The index to remove</param>
+	void remove_at(int index);
+	/// <summary>
+	/// Remove an object from the list
+	/// </summary>
+	/// <param name="object">The object to remove</param>
+	void remove(Object* object);
+};
 
 struct Mesh
 {
@@ -24,6 +85,7 @@ class Object
 {
 private:
 	unsigned int VAO;
+	Shader* shader;
 
 	void load_mesh(const char* path);
 	void generate_buffers();
@@ -33,26 +95,27 @@ public:
 	maths::vec3f position;
 	maths::unit_quaternion rotation;
 	maths::vec3f scale;
+	ObjectList* children;
 
-	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale);
-	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, const char* meshPath);
+	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
+	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath);
 
 	maths::mat4f local_to_world();
 
-	void render();
+	void render(maths::mat4f worldToScreenMatrix);
 };
 
 class Empty : public Object
 {
 public:
-	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale);
-	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, const char* meshPath);
+	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
+	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath);
 };
 
 class Axes : public Empty
 {
 public:
-	Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale);
+	Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
 };
 
 class Camera : public Empty
@@ -63,7 +126,7 @@ public:
 	float farClip;
 	float aspectRatio;
 
-	Camera(maths::vec3f Position, maths::unit_quaternion Rotation, float FOV, float NearClip, float FarClip, float AspectRatio);
+	Camera(maths::vec3f Position, maths::unit_quaternion Rotation, Shader* shader, float FOV, float NearClip, float FarClip, float AspectRatio);
 
 	maths::mat4f cameraspace_matrix();
 	maths::mat4f orthographic_matrix();
@@ -80,19 +143,19 @@ public:
 class Model : public Object
 {
 public:
-	Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, const char* meshPath);
+	Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath);
 };
 
 class Cube : public Model
 {
 public:
-	Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale);
+	Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
 };
 
 class Plane : public Model
 {
 public:
-	Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale);
+	Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
 };
 
 #endif

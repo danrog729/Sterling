@@ -9,6 +9,36 @@
 #include <cstdlib>
 
 /*
+Scene
+*/
+
+void Scene::render_branch(Object* branch, maths::mat4f parentToScreen)
+{
+	for (int childIndex = 0; childIndex < branch->children->count; childIndex++)
+	{
+		render_branch((branch->children)->operator[](childIndex), parentToScreen * branch->local_to_world());
+	}
+	branch->render(parentToScreen);
+}
+
+Scene::Scene(Camera* activeCam)
+{
+	activeCamera = activeCam;
+	children = new ObjectList();
+}
+
+void Scene::render()
+{
+	// calculate global matrix
+	maths::mat4f worldToScreen = activeCamera->orthographic_matrix() * activeCamera->perspective_matrix() * maths::mat4f::stretch_z(-1.0f) * activeCamera->cameraspace_matrix();
+	// navigate the tree, rendering each object
+	for (int child = 0; child < children->count; child++)
+	{
+		render_branch(children->operator[](child), worldToScreen);
+	}
+}
+
+/*
 Object
 */
 
@@ -36,10 +66,16 @@ void Object::load_mesh(const char* path)
 		mesh->colouringMode = flags[3];
 
 		// read addresses
-		int verticesAddress, edgesAddress, facesAddress;
-		meshFile.read(reinterpret_cast<char*>(&verticesAddress), sizeof(int));
-		meshFile.read(reinterpret_cast<char*>(&edgesAddress), sizeof(int));
-		meshFile.read(reinterpret_cast<char*>(&facesAddress), sizeof(int));
+		unsigned int verticesAddress = 0x10, edgesAddress = 0x10, facesAddress = 0x10;
+		meshFile.read(reinterpret_cast<char*>(&verticesAddress), sizeof(unsigned int));
+		meshFile.read(reinterpret_cast<char*>(&edgesAddress), sizeof(unsigned int));
+		meshFile.read(reinterpret_cast<char*>(&facesAddress), sizeof(unsigned int));
+
+		// validate addresses
+		if (verticesAddress > edgesAddress || edgesAddress > facesAddress || verticesAddress > facesAddress)
+		{
+			throw "ERROR::MESH::FILE_NOT_VALID::Vertices must come before edges and edges must come before faces.";
+		}
 
 		// set counts
 		mesh->vertexCount = (edgesAddress - verticesAddress) / sizeof(float);
@@ -91,19 +127,23 @@ void Object::generate_buffers()
 	glBindVertexArray(0);
 }
 
-Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale)
+Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader)
 {
 	position = Position;
 	rotation = Rotation;
 	scale = Scale;
+	this->shader = shader;
+	children = new ObjectList();
 	mesh = NULL;
 	VAO = 0;
 }
-Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, const char* meshPath)
+Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath)
 {
 	position = Position;
 	rotation = Rotation;
 	scale = Scale;
+	this->shader = shader;
+	children = new ObjectList();
 	load_mesh(meshPath);
 	generate_buffers();
 }
@@ -123,8 +163,10 @@ maths::mat4f Object::local_to_world()
 	);
 	return translationMatrix * rotation.to_rotation_matrix() * scaleMatrix;
 }
-void Object::render()
+void Object::render(maths::mat4f worldToScreenMatrix)
 {
+	shader->use();
+	shader->setMat4f("worldToScreen", worldToScreenMatrix * local_to_world());
 	glBindVertexArray(VAO);
 	if (mesh->faceRefCount != 0)
 	{
@@ -140,11 +182,11 @@ void Object::render()
 Empty
 */
 
-Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale) : Object(Position, Rotation, Scale)
+Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader) : Object(Position, Rotation, Scale, shader)
 {
 
 }
-Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, const char* meshPath) : Object(Position, Rotation, Scale, meshPath)
+Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath) : Object(Position, Rotation, Scale, shader, meshPath)
 {
 
 }
@@ -153,7 +195,7 @@ Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3
 Axes
 */
 
-Axes::Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale) : Empty(Position, Rotation, Scale, "models/axes.mdl")
+Axes::Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader) : Empty(Position, Rotation, Scale, shader, "models/axes.mdl")
 {
 
 }
@@ -162,14 +204,13 @@ Axes::Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f 
 Camera
 */
 
-Camera::Camera(maths::vec3f Position, maths::unit_quaternion Rotation, float FOV, float NearClip, float FarClip, float AspectRatio) : Empty(Position, Rotation, maths::vec3f(1.0f, 1.0f, 1.0f), "models/camera.mdl")
+Camera::Camera(maths::vec3f Position, maths::unit_quaternion Rotation, Shader* shader, float FOV, float NearClip, float FarClip, float AspectRatio) : Empty(Position, Rotation, maths::vec3f(1.0f, 1.0f, 1.0f), shader, "models/camera.mdl")
 {
 	fov = FOV;
 	nearClip = NearClip;
 	farClip = FarClip;
 	aspectRatio = AspectRatio;
 	scale = maths::vec3f(tanf(fov / 2.0f), tanf(fov / 2.0f) / aspectRatio, 1.0f);
-
 }
 
 maths::mat4f Camera::cameraspace_matrix()
@@ -244,7 +285,7 @@ maths::vec3f Camera::down()
 Model
 */
 
-Model::Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, const char* meshPath) : Object(Position, Rotation, Scale, meshPath)
+Model::Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath) : Object(Position, Rotation, Scale, shader, meshPath)
 {
 
 }
@@ -253,7 +294,7 @@ Model::Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3
 Cube
 */
 
-Cube::Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale) : Model(Position, Rotation, Scale, "models/cube.mdl")
+Cube::Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader) : Model(Position, Rotation, Scale, shader, "models/cube.mdl")
 {
 
 }
@@ -262,7 +303,122 @@ Cube::Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f 
 Plane
 */
 
-Plane::Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale) : Model(Position, Rotation, Scale, "models/plane.mdl")
+Plane::Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader) : Model(Position, Rotation, Scale, shader, "models/plane.mdl")
 {
 
+}
+
+/*
+ObjectList
+*/
+
+ObjectList::ObjectList()
+{
+	count = 0;
+	capacity = 4;
+	data = (Object**)malloc(capacity * sizeof(Object*));
+	if (data == NULL)
+	{
+		throw "ERROR::SCENE::OBJECTLIST::NOT_ENOUGH_MEMORY";
+	}
+}
+
+Object* ObjectList::operator[](int index)
+{
+	// return a pointer to the object at this index
+	return data[index];
+}
+
+void ObjectList::add(Object* object)
+{
+	if (count + 1 > capacity)
+	{
+		// reallocate memory and copy everything
+		capacity *= 2;
+		Object** newData = (Object**)malloc(capacity * sizeof(Object*));
+		if (newData == NULL)
+		{
+			throw "ERROR::SCENE::OBJECTLIST::NOT_ENOUGH_MEMORY";
+		}
+		for (int index = 0; index < count; index++)
+		{
+			newData[index] = data[index];
+		}
+		free(data);
+		data = newData;
+	}
+	// add the new item
+	data[count] = object;
+	count++;
+}
+
+void ObjectList::insert(Object* object, int index)
+{
+	if (count + 1 > capacity)
+	{
+		// reallocate memory and copy everything, inserting the new one where required
+		capacity *= 2;
+		Object** newData = (Object**)malloc(capacity * sizeof(Object*));
+		if (newData == NULL)
+		{
+			throw "ERROR::SCENE::OBJECTLIST::NOT_ENOUGH_MEMORY";
+		}
+		int insertedNewOne = 0;
+		for (int copyIndex = 0; copyIndex < count; copyIndex++)
+		{
+			if (copyIndex == index)
+			{
+				// add the new one
+				newData[copyIndex] = object;
+				insertedNewOne = 1;
+			}
+			newData[copyIndex + insertedNewOne] = data[copyIndex];
+		}
+		free(data);
+		data = newData;
+	}
+	else
+	{
+		// move the old ones over and insert the new one
+		for (int copyIndex = index; copyIndex < count; copyIndex++)
+		{
+			data[copyIndex + 1] = data[copyIndex];
+		}
+		data[index] = object;
+	}
+	count++;
+}
+
+void ObjectList::remove_at(int index)
+{
+	// copy all of the ones after the target down
+	for (int copyIndex = index; copyIndex < count - 1; copyIndex++)
+	{
+		data[copyIndex] = data[copyIndex + 1];
+	}
+	count--;
+}
+
+void ObjectList::remove(Object* object)
+{
+	// find the object to delete
+	int index = 0;
+	bool found = false;
+	while (!found)
+	{
+		if (data[index] == object)
+		{
+			found = true;
+		}
+		else
+		{
+			index++;
+		}
+	}
+	// copy all the next ones to the one before
+	for (int copyIndex = index; copyIndex < count - 1; copyIndex++)
+	{
+		data[copyIndex] = data[copyIndex + 1];
+	}
+	count--;
 }
