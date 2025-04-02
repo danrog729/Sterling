@@ -51,6 +51,12 @@ public:
 	/// <param name="value">: The values to give the vector4</param>
 	void setVec4f(const std::string& name, float x, float y, float z, float w) const;
 	/// <summary>
+	/// Sets a vector3 of floats inside the shader
+	/// </summary>
+	/// <param name="name">: The identifier of the vector3 inside the shader code</param>
+	/// <param name="value">: The values to give the vector3</param>
+	void setVec3f(const std::string& name, float x, float y, float z) const;
+	/// <summary>
 	/// Sets a matrix4 of floats inside the shader
 	/// </summary>
 	/// <param name="name">: The identifier of the matrix4 inside the shader code</param>

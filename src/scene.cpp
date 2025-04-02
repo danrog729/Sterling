@@ -64,6 +64,7 @@ void Object::load_mesh(const char* path)
 		// read flags
 		char* flags = new char[4];
 		meshFile.read(flags, 4);
+		mesh->shadingMode = flags[2];
 		mesh->colouringMode = flags[3];
 
 		// read addresses
@@ -79,33 +80,81 @@ void Object::load_mesh(const char* path)
 		}
 
 		// set counts
-		mesh->vertexCount = (edgesAddress - verticesAddress) / sizeof(float);
-		mesh->edgeRefCount = (facesAddress - edgesAddress) / sizeof(int);
-		mesh->faceRefCount = (fileSize - facesAddress) / sizeof(int);
+		mesh->vertexCount = (edgesAddress - verticesAddress) / sizeof(float) / 3;
+		mesh->edgeCount = (facesAddress - edgesAddress) / sizeof(int) / 2;
+		mesh->faceCount = (fileSize - facesAddress) / sizeof(int) / 3;
 
 		// allocate memory for vertices, edges, faces
-		mesh->vertices = new float[mesh->vertexCount];
-		mesh->edges = new int[mesh->edgeRefCount];
-		mesh->faces = new int[mesh->faceRefCount];
+		Vertex* vertexData;
+		int uniqueVertexCount = mesh->vertexCount;
+		if (mesh->shadingMode == Mesh::MESH_SHADING_SMOOTH)
+		{
+			mesh->vertices = new Vertex[mesh->vertexCount];
+			vertexData = mesh->vertices;
+		}
+		else
+		{
+			vertexData = new Vertex[mesh->vertexCount];
+			mesh->vertexCount = mesh->faceCount * 3;
+			mesh->vertices = new Vertex[mesh->vertexCount];
+		}
+		mesh->edges = new Edge[mesh->edgeCount];
+		mesh->faces = new Face[mesh->faceCount];
 
 		// fill the arrays with the info
 		meshFile.seekg(verticesAddress, std::ios::beg);
-		meshFile.read(reinterpret_cast<char*>(mesh->vertices), mesh->vertexCount * sizeof(float));
+		for (int vertex = 0; vertex < uniqueVertexCount; vertex++)
+		{
+			meshFile.read(reinterpret_cast<char*>(vertexData + vertex), sizeof(float) * 3);
+		}
 		meshFile.seekg(edgesAddress, std::ios::beg);
-		meshFile.read(reinterpret_cast<char*>(mesh->edges), mesh->edgeRefCount * sizeof(int));
+		meshFile.read(reinterpret_cast<char*>(mesh->edges), mesh->edgeCount * sizeof(int) * 2);
 		meshFile.seekg(facesAddress, std::ios::beg);
-		meshFile.read(reinterpret_cast<char*>(mesh->faces), mesh->faceRefCount * sizeof(int));
+		meshFile.read(reinterpret_cast<char*>(mesh->faces), mesh->faceCount * sizeof(int) * 3);
 
 		// close file handler
 		meshFile.close();
 
 		// calculate normals
-		mesh->normals = new float[mesh->vertexCount];
-		for (unsigned int edge = 0; edge + 1 < mesh->edgeRefCount; edge += 2)
+		for (int vertex = 0; vertex < mesh->vertexCount; vertex++)
 		{
-			int vertex1 = mesh->edges[edge];
-			int vertex2 = mesh->edges[edge + 1];
-			// find 
+			mesh->vertices[vertex].normal = maths::vec3f(0, 0, 0);
+		}
+		for (unsigned int face = 0; face < mesh->faceCount; face++)
+		{
+			// get the 3 vertices of each face
+			Vertex* vertex1 = &vertexData[mesh->faces[face].vertex1];
+			Vertex* vertex2 = &vertexData[mesh->faces[face].vertex2];
+			Vertex* vertex3 = &vertexData[mesh->faces[face].vertex3];
+
+			// find cross product of two of the displacement vectors (find the normal of the face)
+			maths::vec3f cross = maths::vec3f::cross(vertex3->position - vertex1->position, vertex2->position - vertex1->position);
+
+			if (mesh->shadingMode == Mesh::MESH_SHADING_SMOOTH)
+			{
+				// if using smooth shading, add cross product to each vertex's normal
+				vertex1->normal = vertex1->normal + cross;
+				vertex2->normal = vertex2->normal + cross;
+				vertex3->normal = vertex3->normal + cross;
+			}
+			else
+			{
+				// if using flat shading, copy vertex data into actual mesh, with cross product as the normal
+				Vertex realVertex1 = { vertex1->position, cross };
+				Vertex realVertex2 = { vertex2->position, cross };
+				Vertex realVertex3 = { vertex3->position, cross };
+				mesh->vertices[face * 3] = realVertex1;
+				mesh->vertices[face * 3 + 1] = realVertex2;
+				mesh->vertices[face * 3 + 2] = realVertex3;
+				mesh->faces[face].vertex1 = face * 3;
+				mesh->faces[face].vertex2 = face * 3 + 1;
+				mesh->faces[face].vertex3 = face * 3 + 2;
+			}
+		}
+		// normalise the normal vectors
+		for (int vertex = 0; vertex < mesh->vertexCount; vertex++)
+		{
+			mesh->vertices[vertex].normal = maths::vec3f::normalise(mesh->vertices[vertex].normal);
 		}
 	}
 	catch (std::ifstream::failure e)
@@ -122,18 +171,20 @@ void Object::generate_buffers()
 	glGenBuffers(1, &EBO);
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, mesh->vertexCount * sizeof(float) * 3, mesh->vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, mesh->vertexCount * sizeof(float) * 6, mesh->vertices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	if (mesh->faceRefCount != 0)
+	if (mesh->faceCount != 0)
 	{
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->faceRefCount * sizeof(int), mesh->faces, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->faceCount * sizeof(int) * 3, mesh->faces, GL_STATIC_DRAW);
 	}
 	else
 	{
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->edgeRefCount * sizeof(int), mesh->edges, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->edgeCount * sizeof(int) * 3, mesh->edges, GL_STATIC_DRAW);
 	}
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
 }
 
@@ -175,15 +226,15 @@ maths::mat4f Object::local_to_world()
 }
 void Object::render(maths::mat4f worldToScreenMatrix, Colour* ambientLight)
 {
-	material->use(worldToScreenMatrix * local_to_world(), ambientLight);
+	material->use(worldToScreenMatrix, local_to_world(), ambientLight);
 	glBindVertexArray(VAO);
-	if (mesh->faceRefCount != 0)
+	if (mesh->faceCount != 0)
 	{
-		glDrawElements(GL_TRIANGLES, mesh->faceRefCount, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, mesh->faceCount * 3, GL_UNSIGNED_INT, 0);
 	}
 	else
 	{
-		glDrawElements(GL_LINES, mesh->edgeRefCount, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_LINES, mesh->edgeCount * 2, GL_UNSIGNED_INT, 0);
 	}
 }
 

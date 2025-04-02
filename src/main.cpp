@@ -54,16 +54,19 @@ int main()
 	// v-sync
 	glfwSwapInterval(1);
 
+	// enable depth test
+	glEnable(GL_DEPTH_TEST);
+
 	// set up the shader
 	UnlitMaterial* material = new UnlitMaterial(1.0f, 0.5f, 0.31f);
-	ShadedMaterial* shaded = new ShadedMaterial(1.0f, 0.5f, 0.31f);
+	ShadedFlatMaterial* shaded = new ShadedFlatMaterial(1.0f, 0.5f, 0.31f);
 
 	// Set up the camera
 	camera = new Camera(maths::vec3f(0.0f, 0.0f, 3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), material, maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f);
 
 	// Set up the scene
 	scene = new Scene(camera, 0.1f, 0.1f, 0.5f);
-	scene->children->add(new Axes(maths::vec3f(0.0f, 0.0f, 3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f), material));
+	scene->children->add(new Axes(maths::vec3f(2.0f, 5.0f, 5.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f), material));
 	scene->children->add(new Camera(maths::vec3f(0.0f, 0.0f, -3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), material, maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f));
 	scene->children->add(new Cube(maths::vec3f(0.0f, 0.0f, 0.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f), shaded));
 	scene->children->add(new Plane(maths::vec3f(0.0f, 5.0f, 0.0f), maths::unit_quaternion(0.866025403784f, 0.333333333333f, 0.333333333333f, 0.333333333333f), maths::vec3f(1.0f, 1.0f, 1.0f), shaded));
@@ -81,7 +84,7 @@ int main()
 
 		// clear screen
 		glClearColor(scene->ambientLight.red, scene->ambientLight.green, scene->ambientLight.blue, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Render the scene
 		scene->render();
@@ -172,7 +175,7 @@ static void sterling_process_inputs(GLFWwindow* window, float deltaTime)
 	}
 
 	// camera rotation
-	float cameraSensitivity = 0.60f;
+	float cameraSensitivity = 1.0f;
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 	{
 		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->up()), cameraSensitivity * deltaTime) * camera->rotation).normalise();

@@ -23,6 +23,12 @@ maths::vec3f maths::vec3f::cross(const vec3f vector1, const vec3f vector2)
 	);
 }
 
+maths::vec3f maths::vec3f::normalise(const vec3f vector)
+{
+	float magnitude = sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+	return maths::vec3f(vector.x / magnitude, vector.y / magnitude, vector.z / magnitude);
+}
+
 maths::vec3f maths::vec3f::operator*(float value)
 {
 	return maths::vec3f(

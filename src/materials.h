@@ -23,21 +23,28 @@ public:
 	Colour colour;
 
 	Material(const char* vertexShaderPath, const char* fragmentShaderPath, float red, float green, float blue);
-	virtual void use(maths::mat4f cameraMatrix, Colour* ambientLight);
+	virtual void use(maths::mat4f cameraMatrix, maths::mat4f modelMatrix, Colour* ambientLight);
 };
 
 class UnlitMaterial : public Material
 {
 public:
 	UnlitMaterial(float red, float green, float blue);
-	void use(maths::mat4f cameraMatrix, Colour* ambientLight);
+	void use(maths::mat4f cameraMatrix, maths::mat4f modelMatrix, Colour* ambientLight);
 };
 
-class ShadedMaterial : public Material
+class ShadedSmoothMaterial : public Material
 {
 public:
-	ShadedMaterial(float red, float green, float blue);
-	void use(maths::mat4f cameraMatrix, Colour* ambientLight);
+	ShadedSmoothMaterial(float red, float green, float blue);
+	void use(maths::mat4f cameraMatrix, maths::mat4f modelMatrix, Colour* ambientLight);
+};
+
+class ShadedFlatMaterial : public Material
+{
+public:
+	ShadedFlatMaterial(float red, float green, float blue);
+	void use(maths::mat4f cameraMatrix, maths::mat4f modelMatrix, Colour* ambientLight);
 };
 
 #endif

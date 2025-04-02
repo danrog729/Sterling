@@ -19,10 +19,11 @@ Material::Material(const char* vertexShaderPath, const char* fragmentShaderPath,
 	colour = Colour(red, green, blue);
 }
 
-void Material::use(maths::mat4f cameraMatrix, Colour* ambientLight)
+void Material::use(maths::mat4f cameraMatrix, maths::mat4f modelMatrix, Colour* ambientLight)
 {
 	shader->use();
 	shader->setMat4f("worldToScreen", cameraMatrix);
+	shader->setMat4f("modelToWorld", modelMatrix);
 }
 
 UnlitMaterial::UnlitMaterial(float red, float green, float blue) : Material("shaders/unlit.vert", "shaders/unlit.frag", red, green, blue)
@@ -30,22 +31,38 @@ UnlitMaterial::UnlitMaterial(float red, float green, float blue) : Material("sha
 
 }
 
-void UnlitMaterial::use(maths::mat4f cameraMatrix, Colour* ambientLight)
+void UnlitMaterial::use(maths::mat4f cameraMatrix, maths::mat4f modelMatrix, Colour* ambientLight)
 {
 	shader->use();
 	shader->setMat4f("worldToScreen", cameraMatrix);
-	shader->setVec4f("colour", colour.red, colour.green, colour.blue, 1.0f);
+	shader->setMat4f("modelToWorld", modelMatrix);
+	shader->setVec3f("colour", colour.red, colour.green, colour.blue);
 }
 
-ShadedMaterial::ShadedMaterial(float red, float green, float blue) : Material("shaders/shaded.vert", "shaders/shaded.frag", red, green, blue)
+ShadedSmoothMaterial::ShadedSmoothMaterial(float red, float green, float blue) : Material("shaders/shadedSmooth.vert", "shaders/shadedSmooth.frag", red, green, blue)
 {
 
 }
 
-void ShadedMaterial::use(maths::mat4f cameraMatrix, Colour* ambientLight)
+void ShadedSmoothMaterial::use(maths::mat4f cameraMatrix, maths::mat4f modelMatrix, Colour* ambientLight)
 {
 	shader->use();
 	shader->setMat4f("worldToScreen", cameraMatrix);
-	shader->setVec4f("colour", colour.red, colour.green, colour.blue, 1.0f);
-	shader->setVec4f("ambientLight", ambientLight->red, ambientLight->green, ambientLight->blue, 1.0f);
+	shader->setMat4f("modelToWorld", modelMatrix);
+	shader->setVec3f("colour", colour.red, colour.green, colour.blue);
+	shader->setVec3f("ambientLight", ambientLight->red, ambientLight->green, ambientLight->blue);
+}
+
+ShadedFlatMaterial::ShadedFlatMaterial(float red, float green, float blue) : Material("shaders/shadedFlat.vert", "shaders/shadedFlat.frag", red, green, blue)
+{
+
+}
+
+void ShadedFlatMaterial::use(maths::mat4f cameraMatrix, maths::mat4f modelMatrix, Colour* ambientLight)
+{
+	shader->use();
+	shader->setMat4f("worldToScreen", cameraMatrix);
+	shader->setMat4f("modelToWorld", modelMatrix);
+	shader->setVec3f("colour", colour.red, colour.green, colour.blue);
+	shader->setVec3f("ambientLight", ambientLight->red, ambientLight->green, ambientLight->blue);
 }

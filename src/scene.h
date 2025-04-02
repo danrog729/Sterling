@@ -7,6 +7,7 @@
 
 class Scene;
 class ObjectList;
+struct Vertex;
 struct Mesh;
 class Object;
 class Empty;
@@ -66,6 +67,26 @@ public:
 	void remove(Object* object);
 };
 
+struct Vertex
+{
+public:
+	maths::vec3f position;
+	maths::vec3f normal;
+};
+struct Edge
+{
+public:
+	int vertex1;
+	int vertex2;
+};
+struct Face
+{
+public:
+	int vertex1;
+	int vertex2;
+	int vertex3;
+};
+
 struct Mesh
 {
 public:
@@ -74,14 +95,17 @@ public:
 	const static char MESH_COLOURING_EDGE = 2;
 	const static char MESH_COLOURING_FACE = 3;
 
-	float* vertices;
+	const static char MESH_SHADING_SMOOTH = 0;
+	const static char MESH_SHADING_FLAT = 1;
+
+	Vertex* vertices;
 	unsigned int vertexCount;
-	int* edges;
-	unsigned int edgeRefCount;
-	int* faces;
-	unsigned int faceRefCount;
+	Edge* edges;
+	unsigned int edgeCount;
+	Face* faces;
+	unsigned int faceCount;
 	char colouringMode;
-	float* normals;
+	char shadingMode;
 };
 
 class Object

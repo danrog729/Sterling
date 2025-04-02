@@ -22,6 +22,7 @@ namespace maths
 
 		static float dot(const vec3f vector1, const vec3f vector2);
 		static vec3f cross(const vec3f vector1, const vec3f vector2);
+		static vec3f normalise(const vec3f vector);
 
 		vec3f operator*(float value);
 		vec3f operator+(const vec3f& vector);
