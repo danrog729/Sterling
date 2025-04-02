@@ -121,15 +121,15 @@ maths::unit_quaternion maths::unit_quaternion::operator*(const unit_quaternion& 
 {
 	return unit_quaternion(
 		r * quat.r - i * quat.i - j * quat.j - k * quat.k,
-		i * quat.r + r * quat.i - k * quat.j + j * quat.k,
-		j * quat.r - k * quat.i + r * quat.j + i * quat.k,
-		k * quat.r - j * quat.i + i * quat.j + r * quat.k
+		r * quat.i + i * quat.r + j * quat.k - k * quat.j,
+		r * quat.j - i * quat.k + j * quat.r + k * quat.i,
+		r * quat.k + i * quat.j - j * quat.i + k * quat.r
 	);
 }
 
 maths::unit_quaternion maths::unit_quaternion::from_axis_angle(maths::vec3f axis, float angle)
 {
-	return unit_quaternion(cosf(angle), axis.x * sinf(angle), axis.y * sinf(angle), axis.z * sinf(angle)).normalise();
+	return unit_quaternion(cosf(angle / 2), axis.x * sinf(angle / 2), axis.y * sinf(angle / 2), axis.z * sinf(angle / 2)).normalise();
 }
 
 maths::mat4f maths::unit_quaternion::to_rotation_matrix()
