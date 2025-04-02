@@ -39,6 +39,9 @@
     <ClCompile Include="src\scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\materials.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="libs\glfw3.lib">
@@ -70,6 +73,9 @@
     <ClInclude Include="src\shaders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\materials.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\vertex.vert">
@@ -89,6 +95,18 @@
     </None>
     <None Include="models\plane.mdl">
       <Filter>Models</Filter>
+    </None>
+    <None Include="shaders\unlit.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\unlit.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shaded.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shaded.vert">
+      <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

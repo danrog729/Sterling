@@ -20,8 +20,12 @@ namespace maths
 			z = Z;
 		}
 
+		static float dot(const vec3f vector1, const vec3f vector2);
+		static vec3f cross(const vec3f vector1, const vec3f vector2);
+
 		vec3f operator*(float value);
 		vec3f operator+(const vec3f& vector);
+		vec3f operator-(const vec3f& vector);
 	};
 
 	struct vec4f
@@ -35,6 +39,12 @@ namespace maths
 			z = Z;
 			w = W;
 		}
+
+		static float dot(const vec4f vector1, const vec4f vector2);
+
+		vec4f operator*(float value);
+		vec4f operator+(const vec4f& vector);
+		vec4f operator-(const vec4f& vector);
 	};
 
 	struct mat4f

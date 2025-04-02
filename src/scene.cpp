@@ -18,13 +18,14 @@ void Scene::render_branch(Object* branch, maths::mat4f parentToScreen)
 	{
 		render_branch((branch->children)->operator[](childIndex), parentToScreen * branch->local_to_world());
 	}
-	branch->render(parentToScreen);
+	branch->render(parentToScreen, &ambientLight);
 }
 
-Scene::Scene(Camera* activeCam)
+Scene::Scene(Camera* activeCam, float ambientRed, float ambientGreen, float ambientBlue)
 {
 	activeCamera = activeCam;
 	children = new ObjectList();
+	ambientLight = Colour(ambientRed, ambientGreen, ambientBlue);
 }
 
 void Scene::render()
@@ -97,6 +98,15 @@ void Object::load_mesh(const char* path)
 
 		// close file handler
 		meshFile.close();
+
+		// calculate normals
+		mesh->normals = new float[mesh->vertexCount];
+		for (unsigned int edge = 0; edge + 1 < mesh->edgeRefCount; edge += 2)
+		{
+			int vertex1 = mesh->edges[edge];
+			int vertex2 = mesh->edges[edge + 1];
+			// find 
+		}
 	}
 	catch (std::ifstream::failure e)
 	{
@@ -127,22 +137,22 @@ void Object::generate_buffers()
 	glBindVertexArray(0);
 }
 
-Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader)
+Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material)
 {
 	position = Position;
 	rotation = Rotation;
 	scale = Scale;
-	this->shader = shader;
+	this->material = material;
 	children = new ObjectList();
 	mesh = NULL;
 	VAO = 0;
 }
-Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath)
+Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material, const char* meshPath)
 {
 	position = Position;
 	rotation = Rotation;
 	scale = Scale;
-	this->shader = shader;
+	this->material = material;
 	children = new ObjectList();
 	load_mesh(meshPath);
 	generate_buffers();
@@ -163,10 +173,9 @@ maths::mat4f Object::local_to_world()
 	);
 	return translationMatrix * rotation.to_rotation_matrix() * scaleMatrix;
 }
-void Object::render(maths::mat4f worldToScreenMatrix)
+void Object::render(maths::mat4f worldToScreenMatrix, Colour* ambientLight)
 {
-	shader->use();
-	shader->setMat4f("worldToScreen", worldToScreenMatrix * local_to_world());
+	material->use(worldToScreenMatrix * local_to_world(), ambientLight);
 	glBindVertexArray(VAO);
 	if (mesh->faceRefCount != 0)
 	{
@@ -182,11 +191,11 @@ void Object::render(maths::mat4f worldToScreenMatrix)
 Empty
 */
 
-Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader) : Object(Position, Rotation, Scale, shader)
+Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Object(Position, Rotation, Scale, material)
 {
 
 }
-Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath) : Object(Position, Rotation, Scale, shader, meshPath)
+Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material, const char* meshPath) : Object(Position, Rotation, Scale, material, meshPath)
 {
 
 }
@@ -195,7 +204,7 @@ Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3
 Axes
 */
 
-Axes::Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader) : Empty(Position, Rotation, Scale, shader, "models/axes.mdl")
+Axes::Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Empty(Position, Rotation, Scale, material, "models/axes.mdl")
 {
 
 }
@@ -204,7 +213,7 @@ Axes::Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f 
 Camera
 */
 
-Camera::Camera(maths::vec3f Position, maths::unit_quaternion Rotation, Shader* shader, float FOV, float NearClip, float FarClip, float AspectRatio) : Empty(Position, Rotation, maths::vec3f(1.0f, 1.0f, 1.0f), shader, "models/camera.mdl")
+Camera::Camera(maths::vec3f Position, maths::unit_quaternion Rotation, Material* material, float FOV, float NearClip, float FarClip, float AspectRatio) : Empty(Position, Rotation, maths::vec3f(1.0f, 1.0f, 1.0f), material, "models/camera.mdl")
 {
 	fov = FOV;
 	nearClip = NearClip;
@@ -285,7 +294,7 @@ maths::vec3f Camera::down()
 Model
 */
 
-Model::Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath) : Object(Position, Rotation, Scale, shader, meshPath)
+Model::Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material, const char* meshPath) : Object(Position, Rotation, Scale, material, meshPath)
 {
 
 }
@@ -294,7 +303,7 @@ Model::Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3
 Cube
 */
 
-Cube::Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader) : Model(Position, Rotation, Scale, shader, "models/cube.mdl")
+Cube::Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Model(Position, Rotation, Scale, material, "models/cube.mdl")
 {
 
 }
@@ -303,7 +312,7 @@ Cube::Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f 
 Plane
 */
 
-Plane::Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader) : Model(Position, Rotation, Scale, shader, "models/plane.mdl")
+Plane::Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Model(Position, Rotation, Scale, material, "models/plane.mdl")
 {
 
 }

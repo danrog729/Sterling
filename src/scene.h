@@ -3,6 +3,7 @@
 
 #include "maths.h"
 #include "shaders.h"
+#include "materials.h"
 
 class Scene;
 class ObjectList;
@@ -22,8 +23,9 @@ private:
 public:
 	Camera* activeCamera;
 	ObjectList* children;
+	Colour ambientLight;
 
-	Scene(Camera* activeCam);
+	Scene(Camera* activeCam, float ambientRed, float ambientGreen, float ambientBlue);
 
 	void render();
 };
@@ -79,13 +81,14 @@ public:
 	int* faces;
 	unsigned int faceRefCount;
 	char colouringMode;
+	float* normals;
 };
 
 class Object
 {
 private:
 	unsigned int VAO;
-	Shader* shader;
+	Material* material;
 
 	void load_mesh(const char* path);
 	void generate_buffers();
@@ -97,25 +100,25 @@ public:
 	maths::vec3f scale;
 	ObjectList* children;
 
-	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
-	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath);
+	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
+	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader, const char* meshPath);
 
 	maths::mat4f local_to_world();
 
-	void render(maths::mat4f worldToScreenMatrix);
+	void render(maths::mat4f worldToScreenMatrix, Colour* ambientLight);
 };
 
 class Empty : public Object
 {
 public:
-	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
-	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath);
+	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
+	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader, const char* meshPath);
 };
 
 class Axes : public Empty
 {
 public:
-	Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
+	Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
 };
 
 class Camera : public Empty
@@ -126,7 +129,7 @@ public:
 	float farClip;
 	float aspectRatio;
 
-	Camera(maths::vec3f Position, maths::unit_quaternion Rotation, Shader* shader, float FOV, float NearClip, float FarClip, float AspectRatio);
+	Camera(maths::vec3f Position, maths::unit_quaternion Rotation, Material* shader, float FOV, float NearClip, float FarClip, float AspectRatio);
 
 	maths::mat4f cameraspace_matrix();
 	maths::mat4f orthographic_matrix();
@@ -143,19 +146,19 @@ public:
 class Model : public Object
 {
 public:
-	Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader, const char* meshPath);
+	Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader, const char* meshPath);
 };
 
 class Cube : public Model
 {
 public:
-	Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
+	Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
 };
 
 class Plane : public Model
 {
 public:
-	Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Shader* shader);
+	Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
 };
 
 #endif

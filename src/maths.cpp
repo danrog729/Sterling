@@ -6,14 +6,91 @@
 Vector (3 float)
 */
 
+float maths::vec3f::dot(const vec3f vector1, const vec3f vector2)
+{
+	return
+		vector1.x * vector2.x +
+		vector1.y * vector2.y +
+		vector1.z * vector2.z;
+}
+
+maths::vec3f maths::vec3f::cross(const vec3f vector1, const vec3f vector2)
+{
+	return maths::vec3f(
+		vector1.y * vector2.z - vector1.z * vector2.y,
+		vector1.z * vector2.x - vector1.x * vector2.z,
+		vector1.x * vector2.y - vector1.y * vector2.x
+	);
+}
+
 maths::vec3f maths::vec3f::operator*(float value)
 {
-	return maths::vec3f(x * value, y * value, z * value);
+	return maths::vec3f(
+		x * value,
+		y * value,
+		z * value
+	);
 }
 
 maths::vec3f maths::vec3f::operator+(const vec3f& vector)
 {
-	return maths::vec3f(x + vector.x, y + vector.y, z + vector.z);
+	return maths::vec3f(
+		x + vector.x,
+		y + vector.y,
+		z + vector.z
+	);
+}
+
+maths::vec3f maths::vec3f::operator-(const vec3f& vector)
+{
+	return maths::vec3f(
+		x - vector.x,
+		y - vector.y,
+		z - vector.z
+	);
+}
+
+/*
+Vector (4 float)
+*/
+
+float maths::vec4f::dot(const vec4f vector1, const vec4f vector2)
+{
+	return
+		vector1.x * vector2.x +
+		vector1.y * vector2.y +
+		vector1.z * vector2.z +
+		vector1.w * vector2.w;
+}
+
+maths::vec4f maths::vec4f::operator*(float value)
+{
+	return maths::vec4f(
+		x * value,
+		y * value,
+		z * value,
+		w * value
+	);
+}
+
+maths::vec4f maths::vec4f::operator+(const vec4f& vector)
+{
+	return maths::vec4f(
+		x + vector.x,
+		y + vector.y,
+		z + vector.z,
+		w + vector.w
+	);
+}
+
+maths::vec4f maths::vec4f::operator-(const vec4f& vector)
+{
+	return maths::vec4f(
+		x - vector.x,
+		y - vector.y,
+		z - vector.z,
+		w - vector.w
+	);
 }
 
 /*
