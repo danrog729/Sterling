@@ -156,10 +156,8 @@
     <None Include="models\cube.mdl" />
     <None Include="models\plane.mdl" />
     <None Include="shaders\fragment.frag" />
-    <None Include="shaders\shadedFlat.frag" />
-    <None Include="shaders\shadedFlat.vert" />
-    <None Include="shaders\shadedSmooth.frag" />
-    <None Include="shaders\shadedSmooth.vert" />
+    <None Include="shaders\shaded.frag" />
+    <None Include="shaders\shaded.vert" />
     <None Include="shaders\unlit.frag" />
     <None Include="shaders\unlit.vert" />
     <None Include="shaders\vertex.vert" />

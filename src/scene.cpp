@@ -12,30 +12,34 @@
 Scene
 */
 
-void Scene::render_branch(Object* branch, maths::mat4f parentToScreen)
+void Scene::render_branch(Object* branch, maths::mat4f projectionMatrix, maths::mat4f viewMatrix, maths::mat4f parentToWorld)
 {
 	for (int childIndex = 0; childIndex < branch->children->count; childIndex++)
 	{
-		render_branch((branch->children)->operator[](childIndex), parentToScreen * branch->local_to_world());
+		render_branch((branch->children)->operator[](childIndex), projectionMatrix, viewMatrix, parentToWorld * branch->local_to_world());
 	}
-	branch->render(parentToScreen, &ambientLight);
+	branch->render(projectionMatrix, viewMatrix * parentToWorld, 
+		&ambientLight, activeLight->position, new Colour(1.0f, 1.0f, 1.0f));
 }
 
-Scene::Scene(Camera* activeCam, float ambientRed, float ambientGreen, float ambientBlue)
+Scene::Scene(Camera* activeCam, Light* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue)
 {
 	activeCamera = activeCam;
 	children = new ObjectList();
+	children->add(ActiveLight);
 	ambientLight = Colour(ambientRed, ambientGreen, ambientBlue);
+	activeLight = ActiveLight;
 }
 
 void Scene::render()
 {
 	// calculate global matrix
-	maths::mat4f worldToScreen = activeCamera->orthographic_matrix() * activeCamera->perspective_matrix() * maths::mat4f::stretch_z(-1.0f) * activeCamera->cameraspace_matrix();
+	maths::mat4f projection = activeCamera->orthographic_matrix() * activeCamera->perspective_matrix();
+	maths::mat4f view = maths::mat4f::stretch_z(-1.0f) * activeCamera->cameraspace_matrix();
 	// navigate the tree, rendering each object
 	for (int child = 0; child < children->count; child++)
 	{
-		render_branch(children->operator[](child), worldToScreen);
+		render_branch(children->operator[](child), projection, view, maths::mat4f(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
 	}
 }
 
@@ -179,7 +183,7 @@ void Object::generate_buffers()
 	}
 	else
 	{
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->edgeCount * sizeof(int) * 3, mesh->edges, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->edgeCount * sizeof(int) * 2, mesh->edges, GL_STATIC_DRAW);
 	}
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -224,9 +228,11 @@ maths::mat4f Object::local_to_world()
 	);
 	return translationMatrix * rotation.to_rotation_matrix() * scaleMatrix;
 }
-void Object::render(maths::mat4f worldToScreenMatrix, Colour* ambientLight)
+void Object::render(maths::mat4f projectionMatrix, maths::mat4f viewMatrix, 
+	Colour* ambientLight, maths::vec3f lightPosition, Colour* lightColour)
 {
-	material->use(worldToScreenMatrix, local_to_world(), ambientLight);
+	material->use(projectionMatrix, viewMatrix, local_to_world(), 
+		ambientLight, lightPosition, lightColour);
 	glBindVertexArray(VAO);
 	if (mesh->faceCount != 0)
 	{
@@ -339,6 +345,28 @@ maths::vec3f Camera::down()
 {
 	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(0.0f, -1.0f, 0.0f, 0.0f);
 	return maths::vec3f(vector4.x, vector4.y, vector4.z);
+}
+
+/*
+Light
+*/
+
+Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Empty(Position, Rotation, Scale, material)
+{
+
+}
+Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material, const char* meshPath) : Empty(Position, Rotation, Scale, material, meshPath)
+{
+
+}
+
+/*
+PointLight
+*/
+
+PointLight::PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Light(Position, Rotation, Scale, material, "models/pointlight.mdl")
+{
+
 }
 
 /*

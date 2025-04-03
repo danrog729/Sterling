@@ -13,6 +13,8 @@ class Object;
 class Empty;
 class Camera;
 class Axes;
+class Light;
+class PointLight;
 class Model;
 class Cube;
 class Plane;
@@ -20,13 +22,14 @@ class Plane;
 class Scene
 {
 private:
-	void render_branch(Object* branch, maths::mat4f parentToScreen);
+	void render_branch(Object* branch, maths::mat4f projectionMatrix, maths::mat4f viewMatrix, maths::mat4f parentToWorld);
 public:
 	Camera* activeCamera;
+	Light* activeLight;
 	ObjectList* children;
 	Colour ambientLight;
 
-	Scene(Camera* activeCam, float ambientRed, float ambientGreen, float ambientBlue);
+	Scene(Camera* activeCam, Light* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue);
 
 	void render();
 };
@@ -129,7 +132,8 @@ public:
 
 	maths::mat4f local_to_world();
 
-	void render(maths::mat4f worldToScreenMatrix, Colour* ambientLight);
+	void render(maths::mat4f projectionMatrix, maths::mat4f viewMatrix,
+		Colour* ambientLight, maths::vec3f lightPosition, Colour* lightColour);
 };
 
 class Empty : public Object
@@ -165,6 +169,19 @@ public:
 	maths::vec3f right();
 	maths::vec3f up();
 	maths::vec3f down();
+};
+
+class Light : public Empty
+{
+public:
+	Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material);
+	Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader, const char* meshPath);
+};
+
+class PointLight : public Light
+{
+public:
+	PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material);
 };
 
 class Model : public Object
