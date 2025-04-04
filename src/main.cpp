@@ -59,11 +59,13 @@ int main()
 
 	// set up the shader
 	UnlitMaterial* material = new UnlitMaterial(1.0f, 0.5f, 0.31f);
-	ShadedMaterial* shaded = new ShadedMaterial(1.0f, 0.5f, 0.31f);
+	UnlitMaterial* lightMat = new UnlitMaterial(1.0f, 1.0f, 1.0f);
+	ShadedMaterial* shaded = new ShadedMaterial(1.0f, 0.5f, 0.31f, 8);
+	ShadedMaterial* floor = new ShadedMaterial(0.5f, 0.5f, 0.31f, 2);
 
 	// Set up the camera
 	camera = new Camera(maths::vec3f(0.0f, -5.0f, 2.5f), maths::unit_quaternion(sqrtf(2.0f) / 2.0f, sqrtf(2.0f) / 2.0f, 0, 0), material, maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f);
-	Light* light = new PointLight(maths::vec3f(2.0f, 5.0f, 5.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f), material);
+	Light* light = new PointLight(maths::vec3f(2.0f, 5.0f, 5.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(0.2f, 0.2f, 0.2f), lightMat);
 
 	// Set up the scene
 	scene = new Scene(camera, light, 0.1f, 0.1f, 0.5f);
@@ -71,6 +73,7 @@ int main()
 	scene->children->add(new Camera(maths::vec3f(0.0f, 0.0f, -3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), material, maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f));
 	scene->children->add(new Cube(maths::vec3f(0.0f, 0.0f, 0.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f), shaded));
 	scene->children->add(new Plane(maths::vec3f(0.0f, 5.0f, 0.0f), maths::unit_quaternion(0.866025403784f, 0.333333333333f, 0.333333333333f, 0.333333333333f), maths::vec3f(1.0f, 1.0f, 1.0f), shaded));
+	scene->children->add(new Plane(maths::vec3f(0.0f, 0.0f, -1.0f), maths::unit_quaternion(0, 0, 0, 0), maths::vec3f(100.0f, 100.0f, 100.0f), floor));
 
 	// Render loop
 	double previousTime = 0;
@@ -82,6 +85,9 @@ int main()
 
 		// process inputs
 		sterling_process_inputs(window, deltaTime);
+
+		light->position.x = 2 * cosf(currentTime);
+		light->position.z = 5 * sinf(currentTime);
 
 		// clear screen
 		glClearColor(scene->ambientLight.red, scene->ambientLight.green, scene->ambientLight.blue, 1.0f);

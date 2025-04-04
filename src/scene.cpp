@@ -86,7 +86,7 @@ void Object::load_mesh(const char* path)
 		// set counts
 		mesh->vertexCount = (edgesAddress - verticesAddress) / sizeof(float) / 3;
 		mesh->edgeCount = (facesAddress - edgesAddress) / sizeof(int) / 2;
-		mesh->faceCount = (fileSize - facesAddress) / sizeof(int) / 3;
+		mesh->faceCount = (fileSize - facesAddress) / (unsigned int)sizeof(int) / 3;
 
 		// allocate memory for vertices, edges, faces
 		Vertex* vertexData;
@@ -120,7 +120,7 @@ void Object::load_mesh(const char* path)
 		meshFile.close();
 
 		// calculate normals
-		for (int vertex = 0; vertex < mesh->vertexCount; vertex++)
+		for (unsigned int vertex = 0; vertex < mesh->vertexCount; vertex++)
 		{
 			mesh->vertices[vertex].normal = maths::vec3f(0, 0, 0);
 		}
@@ -156,7 +156,7 @@ void Object::load_mesh(const char* path)
 			}
 		}
 		// normalise the normal vectors
-		for (int vertex = 0; vertex < mesh->vertexCount; vertex++)
+		for (unsigned int vertex = 0; vertex < mesh->vertexCount; vertex++)
 		{
 			mesh->vertices[vertex].normal = maths::vec3f::normalise(mesh->vertices[vertex].normal);
 		}

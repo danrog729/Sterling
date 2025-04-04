@@ -38,7 +38,8 @@ public:
 class ShadedMaterial : public Material
 {
 public:
-	ShadedMaterial(float red, float green, float blue);
+	float shininess;
+	ShadedMaterial(float red, float green, float blue, float shininess);
 	void use(maths::mat4f projectionMatrix, maths::mat4f viewMatrix, maths::mat4f modelMatrix,
 		Colour* ambientLight, maths::vec3f lightPos, Colour* lightColour);
 };

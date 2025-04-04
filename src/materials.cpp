@@ -43,9 +43,9 @@ void UnlitMaterial::use(maths::mat4f projectionMatrix, maths::mat4f viewMatrix, 
 	shader->setVec3f("colour", colour.red, colour.green, colour.blue);
 }
 
-ShadedMaterial::ShadedMaterial(float red, float green, float blue) : Material("shaders/shaded.vert", "shaders/shaded.frag", red, green, blue)
+ShadedMaterial::ShadedMaterial(float red, float green, float blue, float shininess) : Material("shaders/shaded.vert", "shaders/shaded.frag", red, green, blue)
 {
-
+	this->shininess = shininess;
 }
 
 void ShadedMaterial::use(
@@ -56,8 +56,14 @@ void ShadedMaterial::use(
 	shader->setMat4f("model", modelMatrix);
 	shader->setMat4f("view", viewMatrix);
 	shader->setMat4f("projection", projectionMatrix);
-	shader->setVec3f("ambientLight", ambientLight->red, ambientLight->green, ambientLight->blue);
-	shader->setVec3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
-	shader->setVec3f("lightColour", lightColour->red, lightColour->green, lightColour->blue);
-	shader->setVec3f("colour", colour.red, colour.green, colour.blue);
+
+	shader->setVec3f("material.ambient", colour.red, colour.green, colour.blue);
+	shader->setVec3f("material.diffuse", colour.red, colour.green, colour.blue);
+	shader->setVec3f("material.specular", colour.red, colour.green, colour.blue);
+	shader->setFloat("material.shininess", shininess);
+
+	shader->setVec3f("light.ambient", ambientLight->red, ambientLight->green, ambientLight->blue);
+	shader->setVec3f("light.position", lightPos.x, lightPos.y, lightPos.z);
+	shader->setVec3f("light.diffuse", lightColour->red, lightColour->green, lightColour->blue);
+	shader->setVec3f("light.specular", lightColour->red, lightColour->green, lightColour->blue);
 }
