@@ -8,10 +8,12 @@
 #include "shaders.h"
 #include "materials.h"
 #include "maths.h"
-#include "scene.h"
+#include "oldscene.h"
+#include "textures.h"
+#include "mesh.h"
 
 Camera* camera;
-Scene* scene;
+OldScene* scene;
 
 int main()
 {
@@ -57,10 +59,15 @@ int main()
 	// enable depth test
 	glEnable(GL_DEPTH_TEST);
 
+	// test stuff
+	Texture2D* texturePNG = new Texture2D("textures/test.png");
+	Mesh* newMesh = new Mesh("models/chair.obj");
+
 	// set up the shader
 	UnlitMaterial* material = new UnlitMaterial(1.0f, 0.5f, 0.31f);
 	UnlitMaterial* lightMat = new UnlitMaterial(1.0f, 1.0f, 1.0f);
 	ShadedMaterial* shaded = new ShadedMaterial(1.0f, 0.5f, 0.31f, 8);
+	ShadedMaterial* shaded2 = new ShadedMaterial(0.56f, 0.95f, 0.77f, 17);
 	ShadedMaterial* floor = new ShadedMaterial(0.5f, 0.5f, 0.31f, 2);
 
 	// Set up the camera
@@ -68,12 +75,11 @@ int main()
 	Light* light = new PointLight(maths::vec3f(2.0f, 5.0f, 5.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(0.2f, 0.2f, 0.2f), lightMat);
 
 	// Set up the scene
-	scene = new Scene(camera, light, 0.1f, 0.1f, 0.5f);
+	scene = new OldScene(camera, light, 0.1f, 0.1f, 0.5f);
 	scene->children->add(new Axes(maths::vec3f(3.5f, 0.0f, 0.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f), material));
 	scene->children->add(new Camera(maths::vec3f(0.0f, 0.0f, -3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), material, maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f));
-	scene->children->add(new Cube(maths::vec3f(0.0f, 0.0f, 0.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f), shaded));
 	scene->children->add(new Plane(maths::vec3f(0.0f, 5.0f, 0.0f), maths::unit_quaternion(0.866025403784f, 0.333333333333f, 0.333333333333f, 0.333333333333f), maths::vec3f(1.0f, 1.0f, 1.0f), shaded));
-	scene->children->add(new Plane(maths::vec3f(0.0f, 0.0f, -1.0f), maths::unit_quaternion(0, 0, 0, 0), maths::vec3f(100.0f, 100.0f, 100.0f), floor));
+	scene->children->add(new Plane(maths::vec3f(0.0f, 0.0f, 0.0f), maths::unit_quaternion(0, 0, 0, 0), maths::vec3f(100.0f, 100.0f, 100.0f), floor));
 
 	// Render loop
 	double previousTime = 0;
@@ -95,6 +101,8 @@ int main()
 
 		// Render the scene
 		scene->render();
+		shaded2->use(camera->orthographic_matrix() * camera->perspective_matrix(), maths::mat4f::stretch_z(-1.0f) * camera->cameraspace_matrix(), maths::mat4f(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1), &scene->ambientLight, light->position, new Colour(1.0f, 1.0f, 1.0f));
+		newMesh->draw();
 
 		// Swap buffers
 		glfwSwapBuffers(window);

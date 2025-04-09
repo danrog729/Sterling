@@ -5,6 +5,21 @@ namespace maths
 {
 	const float PI = 3.141592653589f;
 
+	struct vec2f
+	{
+		float x, y;
+
+		vec2f()
+		{
+			x = 0; y = 0;
+		}
+		vec2f(float X, float Y)
+		{
+			x = X;
+			y = Y;
+		}
+	};
+
 	struct vec3f
 	{
 		float x, y, z;
