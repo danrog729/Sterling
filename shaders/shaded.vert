@@ -2,6 +2,13 @@
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 texCoord;
+
+layout (std140, binding = 0) uniform Matrices
+{
+    mat4 projection;
+    mat4 view;
+};
 
 struct Light
 {
@@ -14,10 +21,9 @@ struct Light
 out vec3 normal;
 out vec3 fragPos;
 out vec3 viewLightPos;
+out vec2 TexCoord;
 
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
 uniform Light light;
 
 void main()
@@ -27,4 +33,5 @@ void main()
     normal = mat3(view) * modelNormal;
     viewLightPos = vec3(view * vec4(light.position, 1.0));
     fragPos = vec3(view * model * vec4(aPos, 1.0));
+    TexCoord = texCoord;
 }

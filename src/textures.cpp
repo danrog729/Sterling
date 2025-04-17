@@ -17,9 +17,18 @@ Texture2D::Texture2D(const char* path)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	unsigned char* data = stbi_load(path, &width, &height, &channelCount, 0);
+	short format = GL_RGB;
+	if (channelCount == 1)
+	{
+		format = GL_DEPTH_COMPONENT;
+	}
+	else if (channelCount == 4)
+	{
+		format = GL_RGBA;
+	}
 	if (data)
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else

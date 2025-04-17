@@ -6,14 +6,14 @@
 
 #include "main.h"
 #include "shaders.h"
-#include "materials.h"
+#include "oldmaterials.h"
 #include "maths.h"
 #include "oldscene.h"
 #include "textures.h"
 #include "mesh.h"
+#include "scene.h"
 
-Camera* camera;
-OldScene* scene;
+Scene* scene;
 
 int main()
 {
@@ -59,27 +59,23 @@ int main()
 	// enable depth test
 	glEnable(GL_DEPTH_TEST);
 
-	// test stuff
-	Texture2D* texturePNG = new Texture2D("textures/test.png");
-	Mesh* newMesh = new Mesh("models/chair.obj");
-
-	// set up the shader
-	UnlitMaterial* material = new UnlitMaterial(1.0f, 0.5f, 0.31f);
-	UnlitMaterial* lightMat = new UnlitMaterial(1.0f, 1.0f, 1.0f);
-	ShadedMaterial* shaded = new ShadedMaterial(1.0f, 0.5f, 0.31f, 8);
-	ShadedMaterial* shaded2 = new ShadedMaterial(0.56f, 0.95f, 0.77f, 17);
-	ShadedMaterial* floor = new ShadedMaterial(0.5f, 0.5f, 0.31f, 2);
-
-	// Set up the camera
-	camera = new Camera(maths::vec3f(0.0f, -5.0f, 2.5f), maths::unit_quaternion(sqrtf(2.0f) / 2.0f, sqrtf(2.0f) / 2.0f, 0, 0), material, maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f);
-	Light* light = new PointLight(maths::vec3f(2.0f, 5.0f, 5.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(0.2f, 0.2f, 0.2f), lightMat);
-
 	// Set up the scene
-	scene = new OldScene(camera, light, 0.1f, 0.1f, 0.5f);
-	scene->children->add(new Axes(maths::vec3f(3.5f, 0.0f, 0.0f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), maths::vec3f(1.0f, 1.0f, 1.0f), material));
-	scene->children->add(new Camera(maths::vec3f(0.0f, 0.0f, -3.5f), maths::unit_quaternion(1.0f, 0.0f, 0.0f, 0.0f), material, maths::PI / 3.0f, 0.1f, 100.0f, 800.0f / 600.0f));
-	scene->children->add(new Plane(maths::vec3f(0.0f, 5.0f, 0.0f), maths::unit_quaternion(0.866025403784f, 0.333333333333f, 0.333333333333f, 0.333333333333f), maths::vec3f(1.0f, 1.0f, 1.0f), shaded));
-	scene->children->add(new Plane(maths::vec3f(0.0f, 0.0f, 0.0f), maths::unit_quaternion(0, 0, 0, 0), maths::vec3f(100.0f, 100.0f, 100.0f), floor));
+	scene = new Scene();
+	Object* chair = new Object("models/crate.obj", scene);
+	scene->add_object(chair);
+	chair->transformation.position(maths::vec3f(-0.67091, -0.049841, 0));
+	chair->transformation.rotation(maths::unit_quaternion(0.935994, -0.022166, -0.008317, 0.351219));
+	
+	Object* crate = new Object("models/chair.obj", scene);
+	scene->add_object(crate);
+	crate->transformation.position(maths::vec3f(0.531813, -0.474596, 0.008897));
+	crate->transformation.rotation(maths::unit_quaternion(1, 0, 0, 0));
+	crate->transformation.scale(maths::vec3f(1.809, 1.809, 1.809));
+
+	Camera* camera = new Camera(scene);
+	camera->transformation.position(maths::vec3f(0, -5, 2.5));
+	camera->transformation.rotation(maths::unit_quaternion(sqrtf(2.0f) / 2.0f, sqrtf(2.0f) / 2.0f, 0, 0));
+	scene->activeCamera = camera;
 
 	// Render loop
 	double previousTime = 0;
@@ -92,17 +88,12 @@ int main()
 		// process inputs
 		sterling_process_inputs(window, deltaTime);
 
-		light->position.x = 2 * cosf(currentTime);
-		light->position.z = 5 * sinf(currentTime);
-
 		// clear screen
-		glClearColor(scene->ambientLight.red, scene->ambientLight.green, scene->ambientLight.blue, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Render the scene
 		scene->render();
-		shaded2->use(camera->orthographic_matrix() * camera->perspective_matrix(), maths::mat4f::stretch_z(-1.0f) * camera->cameraspace_matrix(), maths::mat4f(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1), &scene->ambientLight, light->position, new Colour(1.0f, 1.0f, 1.0f));
-		newMesh->draw();
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -157,62 +148,75 @@ static inline int sterling_initialise_glad()
 static void sterling_framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
-	camera->aspectRatio = ((float)width / height);
+	scene->activeCamera->aspectRatio((float)width / height);
 }
 
 static void sterling_process_inputs(GLFWwindow* window, float deltaTime)
 {
-	// camera movement
+	// oldcamera movement
 	float cameraSpeed = 3.0f;
+	Camera* camera = scene->activeCamera;
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->front() * cameraSpeed * deltaTime;
+		camera->transformation.position(camera->transformation.position() + camera->transformation.down() * cameraSpeed * deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->back() * cameraSpeed * deltaTime;
+		camera->transformation.position(camera->transformation.position() + camera->transformation.up() * cameraSpeed * deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->left() * cameraSpeed * deltaTime;
+		camera->transformation.position(camera->transformation.position() + camera->transformation.left() * cameraSpeed * deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->right() * cameraSpeed * deltaTime;
+		camera->transformation.position(camera->transformation.position() + camera->transformation.right() * cameraSpeed * deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->up() * cameraSpeed * deltaTime;
+		camera->transformation.position(camera->transformation.position() + camera->transformation.forward() * cameraSpeed * deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 	{
-		camera->position = camera->position + camera->down() * cameraSpeed * deltaTime;
+		camera->transformation.position(camera->transformation.position() + camera->transformation.backward() * cameraSpeed * deltaTime);
 	}
 
-	// camera rotation
-	float cameraSensitivity = 1.0f;
+	// oldcamera rotation
+	float cameraSensitivity = 1.5f;
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->up()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
+		camera->transformation.rotation(
+			(maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->transformation.forward()), cameraSensitivity * deltaTime) * camera->transformation.rotation()).normalise()
+		);
 	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->down()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
+		camera->transformation.rotation(
+			(maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->transformation.backward()), cameraSensitivity * deltaTime) * camera->transformation.rotation()).normalise()
+		);
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->right()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
+		camera->transformation.rotation(
+			(maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->transformation.right()), cameraSensitivity * deltaTime) * camera->transformation.rotation()).normalise()
+		);
 	}
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->left()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
+		camera->transformation.rotation(
+			(maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->transformation.left()), cameraSensitivity * deltaTime) * camera->transformation.rotation()).normalise()
+		);
 	}
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->back()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
+		camera->transformation.rotation(
+			(maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->transformation.up()), cameraSensitivity * deltaTime) * camera->transformation.rotation()).normalise()
+		);
 	}
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
-		camera->rotation = (maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->front()), cameraSensitivity * deltaTime) * camera->rotation).normalise();
+		camera->transformation.rotation(
+			(maths::unit_quaternion::from_axis_angle(maths::vec3f(camera->transformation.down()), cameraSensitivity * deltaTime) * camera->transformation.rotation()).normalise()
+		);
 	}
 }

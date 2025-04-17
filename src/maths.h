@@ -70,6 +70,8 @@ namespace maths
 		float m31, m32, m33, m34;
 		float m41, m42, m43, m44;
 
+		mat4f();
+
 		mat4f(
 			float m11, float m12, float m13, float m14,
 			float m21, float m22, float m23, float m24,
@@ -92,6 +94,8 @@ namespace maths
 		vec4f operator*(const vec4f& vector);
 
 		static mat4f stretch_z(float stretch);
+
+		static mat4f transpose(const mat4f matrix);
 	};
 
 	struct unit_quaternion

@@ -3,15 +3,15 @@
 
 #include "maths.h"
 #include "shaders.h"
-#include "materials.h"
+#include "oldmaterials.h"
 
 class OldScene;
 class ObjectList;
 struct OldVertex;
 struct OldMesh;
-class Object;
+class OldObject;
 class Empty;
-class Camera;
+class OldCamera;
 class Axes;
 class Light;
 class PointLight;
@@ -22,14 +22,14 @@ class Plane;
 class OldScene
 {
 private:
-	void render_branch(Object* branch, maths::mat4f projectionMatrix, maths::mat4f viewMatrix, maths::mat4f parentToWorld);
+	void render_branch(OldObject* branch, maths::mat4f projectionMatrix, maths::mat4f viewMatrix, maths::mat4f parentToWorld);
 public:
-	Camera* activeCamera;
+	OldCamera* activeCamera;
 	Light* activeLight;
 	ObjectList* children;
 	Colour ambientLight;
 
-	OldScene(Camera* activeCam, Light* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue);
+	OldScene(OldCamera* activeCam, Light* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue);
 
 	void render();
 };
@@ -37,26 +37,26 @@ public:
 class ObjectList
 {
 private:
-	Object** data;
+	OldObject** data;
 public:
 	int count;
 	int capacity;
 
 	ObjectList();
 
-	Object* operator[](int index);
+	OldObject* operator[](int index);
 
 	/// <summary>
 	/// Add an object to the end of the list
 	/// </summary>
 	/// <param name="object">The object to add</param>
-	void add(Object* object);
+	void add(OldObject* object);
 	/// <summary>
 	/// Insert an object at a specific index
 	/// </summary>
 	/// <param name="object">The object to insert</param>
 	/// <param name="index">The index to insert it at</param>
-	void insert(Object* object, int index);
+	void insert(OldObject* object, int index);
 
 	/// <summary>
 	/// Remove an object at a specific index
@@ -67,7 +67,7 @@ public:
 	/// Remove an object from the list
 	/// </summary>
 	/// <param name="object">The object to remove</param>
-	void remove(Object* object);
+	void remove(OldObject* object);
 };
 
 struct OldVertex
@@ -111,11 +111,11 @@ public:
 	char shadingMode;
 };
 
-class Object
+class OldObject
 {
 private:
 	unsigned int VAO;
-	Material* material;
+	OldMaterial* material;
 
 	void load_mesh(const char* path);
 	void generate_buffers();
@@ -127,8 +127,8 @@ public:
 	maths::vec3f scale;
 	ObjectList* children;
 
-	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
-	Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader, const char* meshPath);
+	OldObject(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader);
+	OldObject(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader, const char* meshPath);
 
 	maths::mat4f local_to_world();
 
@@ -136,20 +136,20 @@ public:
 		Colour* ambientLight, maths::vec3f lightPosition, Colour* lightColour);
 };
 
-class Empty : public Object
+class Empty : public OldObject
 {
 public:
-	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
-	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader, const char* meshPath);
+	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader);
+	Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader, const char* meshPath);
 };
 
 class Axes : public Empty
 {
 public:
-	Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
+	Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader);
 };
 
-class Camera : public Empty
+class OldCamera : public Empty
 {
 public:
 	float fov;
@@ -157,7 +157,7 @@ public:
 	float farClip;
 	float aspectRatio;
 
-	Camera(maths::vec3f Position, maths::unit_quaternion Rotation, Material* shader, float FOV, float NearClip, float FarClip, float AspectRatio);
+	OldCamera(maths::vec3f Position, maths::unit_quaternion Rotation, OldMaterial* shader, float FOV, float NearClip, float FarClip, float AspectRatio);
 
 	maths::mat4f cameraspace_matrix();
 	maths::mat4f orthographic_matrix();
@@ -174,32 +174,32 @@ public:
 class Light : public Empty
 {
 public:
-	Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material);
-	Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader, const char* meshPath);
+	Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material);
+	Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader, const char* meshPath);
 };
 
 class PointLight : public Light
 {
 public:
-	PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material);
+	PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material);
 };
 
-class Model : public Object
+class Model : public OldObject
 {
 public:
-	Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader, const char* meshPath);
+	Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader, const char* meshPath);
 };
 
 class Cube : public Model
 {
 public:
-	Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
+	Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader);
 };
 
 class Plane : public Model
 {
 public:
-	Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* shader);
+	Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader);
 };
 
 #endif

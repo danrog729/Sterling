@@ -102,7 +102,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -117,7 +117,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -131,7 +131,9 @@
   <ItemGroup>
     <ClCompile Include="libs\glad.c" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\materials.cpp" />
+    <ClCompile Include="src\material.cpp" />
+    <ClCompile Include="src\object.cpp" />
+    <ClCompile Include="src\oldmaterials.cpp" />
     <ClCompile Include="src\maths.cpp" />
     <ClCompile Include="src\mesh.cpp" />
     <ClCompile Include="src\oldscene.cpp" />
@@ -143,13 +145,16 @@
     <Library Include="libs\glfw3.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\fast_obj\fast_obj.h" />
     <ClInclude Include="include\glad\glad.h" />
     <ClInclude Include="include\GLFW\glfw3.h" />
     <ClInclude Include="include\GLFW\glfw3native.h" />
     <ClInclude Include="include\KHR\khrplatform.h" />
     <ClInclude Include="include\stb\stb_image.h" />
     <ClInclude Include="src\main.h" />
-    <ClInclude Include="src\materials.h" />
+    <ClInclude Include="src\material.h" />
+    <ClInclude Include="src\object.h" />
+    <ClInclude Include="src\oldmaterials.h" />
     <ClInclude Include="src\maths.h" />
     <ClInclude Include="src\mesh.h" />
     <ClInclude Include="src\oldscene.h" />

@@ -12,7 +12,7 @@
 OldScene
 */
 
-void OldScene::render_branch(Object* branch, maths::mat4f projectionMatrix, maths::mat4f viewMatrix, maths::mat4f parentToWorld)
+void OldScene::render_branch(OldObject* branch, maths::mat4f projectionMatrix, maths::mat4f viewMatrix, maths::mat4f parentToWorld)
 {
 	for (int childIndex = 0; childIndex < branch->children->count; childIndex++)
 	{
@@ -22,7 +22,7 @@ void OldScene::render_branch(Object* branch, maths::mat4f projectionMatrix, math
 		&ambientLight, activeLight->position, new Colour(1.0f, 1.0f, 1.0f));
 }
 
-OldScene::OldScene(Camera* activeCam, Light* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue)
+OldScene::OldScene(OldCamera* activeCam, Light* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue)
 {
 	activeCamera = activeCam;
 	children = new ObjectList();
@@ -47,7 +47,7 @@ void OldScene::render()
 Object
 */
 
-void Object::load_mesh(const char* path)
+void OldObject::load_mesh(const char* path)
 {
 	// create the new mesh struct
 	mesh = new OldMesh();
@@ -167,7 +167,7 @@ void Object::load_mesh(const char* path)
 	}
 }
 
-void Object::generate_buffers()
+void OldObject::generate_buffers()
 {
 	unsigned int VBO, EBO;
 	glGenVertexArrays(1, &VAO);
@@ -192,7 +192,7 @@ void Object::generate_buffers()
 	glBindVertexArray(0);
 }
 
-Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material)
+OldObject::OldObject(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material)
 {
 	position = Position;
 	rotation = Rotation;
@@ -202,7 +202,7 @@ Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::ve
 	mesh = NULL;
 	VAO = 0;
 }
-Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material, const char* meshPath)
+OldObject::OldObject(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material, const char* meshPath)
 {
 	position = Position;
 	rotation = Rotation;
@@ -212,7 +212,7 @@ Object::Object(maths::vec3f Position, maths::unit_quaternion Rotation, maths::ve
 	load_mesh(meshPath);
 	generate_buffers();
 }
-maths::mat4f Object::local_to_world()
+maths::mat4f OldObject::local_to_world()
 {
 	maths::mat4f scaleMatrix = maths::mat4f(
 		scale.x, 0.0f, 0.0f, 0.0f,
@@ -226,13 +226,15 @@ maths::mat4f Object::local_to_world()
 		0.0f, 0.0f, 1.0f, position.z,
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
+
 	return translationMatrix * rotation.to_rotation_matrix() * scaleMatrix;
 }
-void Object::render(maths::mat4f projectionMatrix, maths::mat4f viewMatrix, 
+void OldObject::render(maths::mat4f projectionMatrix, maths::mat4f viewMatrix, 
 	Colour* ambientLight, maths::vec3f lightPosition, Colour* lightColour)
 {
 	material->use(projectionMatrix, viewMatrix, local_to_world(), 
 		ambientLight, lightPosition, lightColour);
+
 	glBindVertexArray(VAO);
 	if (mesh->faceCount != 0)
 	{
@@ -248,11 +250,11 @@ void Object::render(maths::mat4f projectionMatrix, maths::mat4f viewMatrix,
 Empty
 */
 
-Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Object(Position, Rotation, Scale, material)
+Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : OldObject(Position, Rotation, Scale, material)
 {
 
 }
-Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material, const char* meshPath) : Object(Position, Rotation, Scale, material, meshPath)
+Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material, const char* meshPath) : OldObject(Position, Rotation, Scale, material, meshPath)
 {
 
 }
@@ -261,16 +263,16 @@ Empty::Empty(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3
 Axes
 */
 
-Axes::Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Empty(Position, Rotation, Scale, material, "models/axes.mdl")
+Axes::Axes(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : Empty(Position, Rotation, Scale, material, "models/axes.mdl")
 {
 
 }
 
 /*
-Camera
+OldCamera
 */
 
-Camera::Camera(maths::vec3f Position, maths::unit_quaternion Rotation, Material* material, float FOV, float NearClip, float FarClip, float AspectRatio) : Empty(Position, Rotation, maths::vec3f(1.0f, 1.0f, 1.0f), material, "models/camera.mdl")
+OldCamera::OldCamera(maths::vec3f Position, maths::unit_quaternion Rotation, OldMaterial* material, float FOV, float NearClip, float FarClip, float AspectRatio) : Empty(Position, Rotation, maths::vec3f(1.0f, 1.0f, 1.0f), material, "models/camera.mdl")
 {
 	fov = FOV;
 	nearClip = NearClip;
@@ -279,7 +281,7 @@ Camera::Camera(maths::vec3f Position, maths::unit_quaternion Rotation, Material*
 	scale = maths::vec3f(tanf(fov / 2.0f), tanf(fov / 2.0f) / aspectRatio, 1.0f);
 }
 
-maths::mat4f Camera::cameraspace_matrix()
+maths::mat4f OldCamera::cameraspace_matrix()
 {
 	maths::mat4f locationMatrix = maths::mat4f(
 		1.0f, 0.0f, 0.0f, -position.x,
@@ -288,10 +290,11 @@ maths::mat4f Camera::cameraspace_matrix()
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 	maths::mat4f rotationMatrix = rotation.conjugate().to_rotation_matrix();
+
 	return rotationMatrix * locationMatrix;
 }
 
-maths::mat4f Camera::orthographic_matrix()
+maths::mat4f OldCamera::orthographic_matrix()
 {
 	return maths::mat4f(
 		1.0f / (nearClip * tanf(fov / 2.0f)), 0.0f, 0.0f, 0.0f,
@@ -301,7 +304,7 @@ maths::mat4f Camera::orthographic_matrix()
 	);
 }
 
-maths::mat4f Camera::perspective_matrix()
+maths::mat4f OldCamera::perspective_matrix()
 {
 	return maths::mat4f(
 		nearClip, 0.0f, 0.0f, 0.0f,
@@ -311,37 +314,37 @@ maths::mat4f Camera::perspective_matrix()
 	);
 }
 
-maths::vec3f Camera::front()
+maths::vec3f OldCamera::front()
 {
 	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(0.0f, 0.0f, -1.0f, 0.0f);
 	return maths::vec3f(vector4.x, vector4.y, vector4.z);
 }
 
-maths::vec3f Camera::back()
+maths::vec3f OldCamera::back()
 {
 	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(0.0f, 0.0f, 1.0f, 0.0f);
 	return maths::vec3f(vector4.x, vector4.y, vector4.z);
 }
 
-maths::vec3f Camera::left()
+maths::vec3f OldCamera::left()
 {
 	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(-1.0f, 0.0f, 0.0f, 0.0f);
 	return maths::vec3f(vector4.x, vector4.y, vector4.z);
 }
 
-maths::vec3f Camera::right()
+maths::vec3f OldCamera::right()
 {
 	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(1.0f, 0.0f, 0.0f, 0.0f);
 	return maths::vec3f(vector4.x, vector4.y, vector4.z);
 }
 
-maths::vec3f Camera::up()
+maths::vec3f OldCamera::up()
 {
 	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(0.0f, 1.0f, 0.0f, 0.0f);
 	return maths::vec3f(vector4.x, vector4.y, vector4.z);
 }
 
-maths::vec3f Camera::down()
+maths::vec3f OldCamera::down()
 {
 	maths::vec4f vector4 = rotation.to_rotation_matrix() * maths::vec4f(0.0f, -1.0f, 0.0f, 0.0f);
 	return maths::vec3f(vector4.x, vector4.y, vector4.z);
@@ -351,11 +354,11 @@ maths::vec3f Camera::down()
 Light
 */
 
-Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Empty(Position, Rotation, Scale, material)
+Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : Empty(Position, Rotation, Scale, material)
 {
 
 }
-Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material, const char* meshPath) : Empty(Position, Rotation, Scale, material, meshPath)
+Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material, const char* meshPath) : Empty(Position, Rotation, Scale, material, meshPath)
 {
 
 }
@@ -364,7 +367,7 @@ Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3
 PointLight
 */
 
-PointLight::PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Light(Position, Rotation, Scale, material, "models/pointlight.mdl")
+PointLight::PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : Light(Position, Rotation, Scale, material, "models/pointlight.mdl")
 {
 
 }
@@ -373,7 +376,7 @@ PointLight::PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, m
 Model
 */
 
-Model::Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material, const char* meshPath) : Object(Position, Rotation, Scale, material, meshPath)
+Model::Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material, const char* meshPath) : OldObject(Position, Rotation, Scale, material, meshPath)
 {
 
 }
@@ -382,7 +385,7 @@ Model::Model(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3
 Cube
 */
 
-Cube::Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Model(Position, Rotation, Scale, material, "models/cube.mdl")
+Cube::Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : Model(Position, Rotation, Scale, material, "models/cube.mdl")
 {
 
 }
@@ -391,7 +394,7 @@ Cube::Cube(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f 
 Plane
 */
 
-Plane::Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, Material* material) : Model(Position, Rotation, Scale, material, "models/plane.mdl")
+Plane::Plane(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : Model(Position, Rotation, Scale, material, "models/plane.mdl")
 {
 
 }
@@ -404,26 +407,26 @@ ObjectList::ObjectList()
 {
 	count = 0;
 	capacity = 4;
-	data = (Object**)malloc(capacity * sizeof(Object*));
+	data = (OldObject**)malloc(capacity * sizeof(OldObject*));
 	if (data == NULL)
 	{
 		throw "ERROR::SCENE::OBJECTLIST::NOT_ENOUGH_MEMORY";
 	}
 }
 
-Object* ObjectList::operator[](int index)
+OldObject* ObjectList::operator[](int index)
 {
 	// return a pointer to the object at this index
 	return data[index];
 }
 
-void ObjectList::add(Object* object)
+void ObjectList::add(OldObject* object)
 {
 	if (count + 1 > capacity)
 	{
 		// reallocate memory and copy everything
 		capacity *= 2;
-		Object** newData = (Object**)malloc(capacity * sizeof(Object*));
+		OldObject** newData = (OldObject**)malloc(capacity * sizeof(OldObject*));
 		if (newData == NULL)
 		{
 			throw "ERROR::SCENE::OBJECTLIST::NOT_ENOUGH_MEMORY";
@@ -440,13 +443,13 @@ void ObjectList::add(Object* object)
 	count++;
 }
 
-void ObjectList::insert(Object* object, int index)
+void ObjectList::insert(OldObject* object, int index)
 {
 	if (count + 1 > capacity)
 	{
 		// reallocate memory and copy everything, inserting the new one where required
 		capacity *= 2;
-		Object** newData = (Object**)malloc(capacity * sizeof(Object*));
+		OldObject** newData = (OldObject**)malloc(capacity * sizeof(OldObject*));
 		if (newData == NULL)
 		{
 			throw "ERROR::SCENE::OBJECTLIST::NOT_ENOUGH_MEMORY";
@@ -487,7 +490,7 @@ void ObjectList::remove_at(int index)
 	count--;
 }
 
-void ObjectList::remove(Object* object)
+void ObjectList::remove(OldObject* object)
 {
 	// find the object to delete
 	int index = 0;
