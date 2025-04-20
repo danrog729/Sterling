@@ -165,18 +165,6 @@
     <None Include="shaders\fragment.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="models\axes.mdl">
-      <Filter>Models</Filter>
-    </None>
-    <None Include="models\camera.mdl">
-      <Filter>Models</Filter>
-    </None>
-    <None Include="models\cube.mdl">
-      <Filter>Models</Filter>
-    </None>
-    <None Include="models\plane.mdl">
-      <Filter>Models</Filter>
-    </None>
     <None Include="shaders\unlit.frag">
       <Filter>Shaders</Filter>
     </None>
@@ -188,6 +176,24 @@
     </None>
     <None Include="shaders\shaded.vert">
       <Filter>Shaders</Filter>
+    </None>
+    <None Include="models\chair.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\crate.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\groundplane.mtl">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\chair.object">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\crate.object">
+      <Filter>Models</Filter>
+    </None>
+    <None Include="models\groundplane.object">
+      <Filter>Models</Filter>
     </None>
   </ItemGroup>
 </Project>

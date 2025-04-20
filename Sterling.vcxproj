@@ -177,10 +177,12 @@
     <ClInclude Include="src\textures.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="models\axes.mdl" />
-    <None Include="models\camera.mdl" />
-    <None Include="models\cube.mdl" />
-    <None Include="models\plane.mdl" />
+    <None Include="models\chair.mtl" />
+    <None Include="models\chair.object" />
+    <None Include="models\crate.mtl" />
+    <None Include="models\crate.object" />
+    <None Include="models\groundplane.mtl" />
+    <None Include="models\groundplane.object" />
     <None Include="shaders\fragment.frag" />
     <None Include="shaders\shaded.frag" />
     <None Include="shaders\shaded.vert" />
