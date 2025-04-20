@@ -134,6 +134,7 @@ public:
 	/// Initialise the mesh/material lists/dictionaries, the lights list and the object tree
 	/// </summary>
 	Scene();
+	~Scene();
 
 	/// <summary>
 	/// Ask the scene to load a .mesh file. Returns an index for the mesh in the mesh list.

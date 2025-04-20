@@ -163,6 +163,34 @@ Object::Object(const char* filepath, Scene* scene)
 	hasMesh = true;
 }
 
+Object::~Object()
+{
+	std::vector<Object*>* parentsList;
+	if (parent == NULL)
+	{
+		parentsList = &scene->children;
+	}
+	else
+	{
+		parentsList = &parent->children;
+	}
+	// remove from parent's child list
+	bool found = false;
+	for (int childIndex = 0; childIndex < parentsList->size() && !found; childIndex++)
+	{
+		if ((*parentsList)[childIndex] == this)
+		{
+			found = true;
+			parentsList->erase(parentsList->begin() + childIndex);
+		}
+	}
+	// add all of the object's children to the parent's child list
+	for (int childIndex = 0; childIndex < children.size(); childIndex++)
+	{
+		parentsList->push_back(children[childIndex]);
+	}
+}
+
 void Object::add_child(Object* child)
 {
 	children.push_back(child);
@@ -240,9 +268,9 @@ void Camera::aspectRatio(float newAspectRatio)
 
 Camera::Camera(Scene* newScene) : Object(newScene)
 {
-	_fov = maths::PI / 2;
-	_nearClip = 0.1;
-	_farClip = 100;
+	_fov = maths::PI / 2.0f;
+	_nearClip = 0.1f;
+	_farClip = 100.0f;
 	_aspectRatio = 4.0f / 3.0f;
 	projectionMatrixDirty = true;
 
@@ -252,6 +280,15 @@ Camera::Camera(Scene* newScene) : Object(newScene)
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, matrixBuffer);
 	projection_matrix();
+}
+
+Camera::~Camera()
+{
+	// remove the scene's reference to the active camera if this is the active camera
+	if (scene->activeCamera == this)
+	{
+		scene->activeCamera = NULL;
+	}
 }
 
 maths::mat4f Camera::projection_matrix()
@@ -302,6 +339,10 @@ Light::Light(Scene* scene) : Object(scene)
 	_colour = maths::vec3f(1.0f, 1.0f, 1.0f);
 	_isDirty = true;
 }
+Light::~Light()
+{
+	
+}
 maths::vec3f Light::colour()
 {
 	return _colour;
@@ -325,6 +366,19 @@ AmbientLight::AmbientLight(Scene* scene) : Light(scene)
 {
 	scene->ambientLights.push_back(this);
 }
+AmbientLight::~AmbientLight()
+{
+	// remove self from scene's ambient light list
+	bool found = false;
+	for (int childIndex = 0; childIndex < scene->ambientLights.size() && !found; childIndex++)
+	{
+		if (scene->ambientLights[childIndex] == this)
+		{
+			found = true;
+			scene->ambientLights.erase(scene->ambientLights.begin() + childIndex);
+		}
+	}
+}
 
 PointLight::PointLight(Scene* scene) : Light(scene)
 {
@@ -332,6 +386,19 @@ PointLight::PointLight(Scene* scene) : Light(scene)
 	_linearAttenuation = 0.07f;
 	_quadraticAttenuation = 0.017f;
 	scene->pointLights.push_back(this);
+}
+PointLight::~PointLight()
+{
+	// remove self from scene's point light list
+	bool found = false;
+	for (int childIndex = 0; childIndex < scene->pointLights.size() && !found; childIndex++)
+	{
+		if (scene->pointLights[childIndex] == this)
+		{
+			found = true;
+			scene->pointLights.erase(scene->pointLights.begin() + childIndex);
+		}
+	}
 }
 float PointLight::constantAttenuation()
 {
@@ -387,6 +454,19 @@ Spotlight::Spotlight(Scene* scene) : Light(scene)
 	_innerCutoff = 0.45f;
 	_outerCutoff = maths::PI / 6;
 	scene->spotlights.push_back(this);
+}
+Spotlight::~Spotlight()
+{
+	// remove self from scene's spotlight list
+	bool found = false;
+	for (int childIndex = 0; childIndex < scene->spotlights.size() && !found; childIndex++)
+	{
+		if (scene->spotlights[childIndex] == this)
+		{
+			found = true;
+			scene->spotlights.erase(scene->spotlights.begin() + childIndex);
+		}
+	}
 }
 float Spotlight::constantAttenuation()
 {
@@ -461,6 +541,19 @@ void Spotlight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpac
 DirectionalLight::DirectionalLight(Scene* scene) : Light(scene)
 {
 	scene->directionalLights.push_back(this);
+}
+DirectionalLight::~DirectionalLight()
+{
+	// remove self from scene's directional light list
+	bool found = false;
+	for (int childIndex = 0; childIndex < scene->directionalLights.size() && !found; childIndex++)
+	{
+		if (scene->directionalLights[childIndex] == this)
+		{
+			found = true;
+			scene->directionalLights.erase(scene->directionalLights.begin() + childIndex);
+		}
+	}
 }
 void DirectionalLight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate)
 {

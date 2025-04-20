@@ -4,6 +4,11 @@
 #include "../include/glad/glad.h"
 #include "../include/GLFW/glfw3.h"
 
+#define IMGUI_IMPL_OPENGL_LOADER_GLAD
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 #include "main.h"
 #include "shaders.h"
 #include "maths.h"
@@ -57,6 +62,11 @@ int main()
 
 	// enable depth test
 	glEnable(GL_DEPTH_TEST);
+
+	// Set up imgui
+	ImGui::CreateContext();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init();
 
 	// Set up the scene
 	scene = new Scene();
@@ -118,8 +128,18 @@ int main()
 		// process inputs
 		sterling_process_inputs(window, deltaTime);
 
+		// Refresh imgui
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGui::ShowDemoWindow();
+
 		// Render the scene
 		scene->render();
+
+		// Render imgui
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -129,6 +149,10 @@ int main()
 		previousTime = currentTime;
 	}
 
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	delete scene;
 	glfwTerminate();
 	return 0;
 }

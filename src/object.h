@@ -87,6 +87,11 @@ public:
 	/// <param name="scene">The scene to add the object to</param>
 	Object(const char* filepath, Scene* scene);
 	/// <summary>
+	/// Destroy the object
+	/// </summary>
+	virtual ~Object();
+
+	/// <summary>
 	/// Give this object a child
 	/// </summary>
 	/// <param name="child">The object to add as a child</param>
@@ -130,6 +135,8 @@ public:
 
 	Camera(Scene* scene);
 
+	~Camera() override;
+
 	/// <summary>
 	/// Return the matrix to transform viewspace points into screenspace points
 	/// </summary>
@@ -158,6 +165,7 @@ public:
 	bool isDirty();
 
 	Light(Scene* scene);
+	virtual ~Light() override;
 
 	// Forcibly clear the isDirty flag
 	void clean();
@@ -167,6 +175,7 @@ class AmbientLight : public Light
 {
 public:
 	AmbientLight(Scene* scene);
+	~AmbientLight() override;
 };
 
 class PointLight : public Light
@@ -187,6 +196,7 @@ public:
 	void quadraticAttenuation(float newValue);
 
 	PointLight(Scene* scene);
+	~PointLight() override;
 
 	/// <summary>
 	/// Add this light's information to the currently bound uniform buffer, at a specified offset
@@ -221,6 +231,7 @@ public:
 	void outerCutoff(float newValue);
 
 	Spotlight(Scene* scene);
+	~Spotlight() override;
 
 	/// <summary>
 	/// Add this light's information to the currently bound uniform buffer, at a specified offset
@@ -235,6 +246,7 @@ class DirectionalLight : public Light
 {
 public:
 	DirectionalLight(Scene* scene);
+	~DirectionalLight() override;
 
 	/// <summary>
 	/// Add this light's information to the currently bound uniform buffer, at a specified offset

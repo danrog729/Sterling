@@ -101,75 +101,55 @@ Scene
 void Scene::update_ambient_lights()
 {
 	backgroundColour = maths::vec3f(0.0f, 0.0f, 0.0f);
-	bool needsUpdating = false;
 	for (int lightIndex = 0; lightIndex < ambientLights.size(); lightIndex++)
 	{
 		backgroundColour = backgroundColour + ambientLights[lightIndex]->colour();
-		needsUpdating |= ambientLights[lightIndex]->isDirty();
 		ambientLights[lightIndex]->clean();
 	}
 	backgroundColour = backgroundColour / ambientLights.size();
-	if (needsUpdating)
-	{
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, 12, &backgroundColour);
-	}
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 12, &backgroundColour);
 }
 
 void Scene::update_point_lights(maths::mat4f viewMatrix, bool updateLightPositions)
 {
-	bool needsUpdating = false;
 	for (int lightIndex = 0; lightIndex < pointLights.size() && lightIndex < 16; lightIndex++)
 	{
-		needsUpdating |= pointLights[lightIndex]->isDirty();
 		pointLights[lightIndex]->add_to_uniform_buffer(16 + lightIndex * 48, viewMatrix, updateLightPositions);
 	}
-	if (needsUpdating)
+	unsigned int minimum = pointLights.size();
+	if (minimum > 16)
 	{
-		unsigned int minimum = pointLights.size();
-		if (minimum > 16)
-		{
-			minimum = 16;
-		}
-		glBufferSubData(GL_UNIFORM_BUFFER, 2320, 4, &minimum);
+		minimum = 16;
 	}
+	glBufferSubData(GL_UNIFORM_BUFFER, 2320, 4, &minimum);
 }
 
 void Scene::update_spotlights(maths::mat4f viewMatrix, bool updateLightPositions)
 {
-	bool needsUpdating = false;
 	for (int lightIndex = 0; lightIndex < spotlights.size() && lightIndex < 16; lightIndex++)
 	{
-		needsUpdating |= spotlights[lightIndex]->isDirty();
 		spotlights[lightIndex]->add_to_uniform_buffer(784 + lightIndex * 64, viewMatrix, updateLightPositions);
 	}
-	if (needsUpdating)
+	unsigned int minimum = spotlights.size();
+	if (minimum > 16)
 	{
-		unsigned int minimum = spotlights.size();
-		if (minimum > 16)
-		{
-			minimum = 16;
-		}
-		glBufferSubData(GL_UNIFORM_BUFFER, 2324, 4, &minimum);
+		minimum = 16;
 	}
+	glBufferSubData(GL_UNIFORM_BUFFER, 2324, 4, &minimum);
 }
 
 void Scene::update_directional_lights(maths::mat4f viewMatrix, bool updateLightPositions)
 {
-	bool needsUpdating = false;
 	for (int lightIndex = 0; lightIndex < directionalLights.size() && lightIndex < 16; lightIndex++)
 	{
-		needsUpdating |= directionalLights[lightIndex]->isDirty();
 		directionalLights[lightIndex]->add_to_uniform_buffer(1808 + lightIndex * 64, viewMatrix, updateLightPositions);
 	}
-	if (needsUpdating)
+	unsigned int minimum = directionalLights.size();
+	if (minimum > 16)
 	{
-		unsigned int minimum = directionalLights.size();
-		if (minimum > 16)
-		{
-			minimum = 16;
-		}
-		glBufferSubData(GL_UNIFORM_BUFFER, 2328, 4, &minimum);
+		minimum = 16;
 	}
+	glBufferSubData(GL_UNIFORM_BUFFER, 2328, 4, &minimum);
 }
 
 Scene::Scene()
@@ -183,6 +163,31 @@ Scene::Scene()
 	glBufferData(GL_UNIFORM_BUFFER, 2336, NULL, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 1, lightBuffer);
+}
+Scene::~Scene()
+{
+	// delete everything associated with this scene
+	delete activeCamera;
+	while (ambientLights.size() > 0)
+	{
+		delete ambientLights[0];
+	}
+	while (pointLights.size() > 0)
+	{
+		delete pointLights[0];
+	}
+	while (spotlights.size() > 0)
+	{
+		delete spotlights[0];
+	}
+	while (directionalLights.size() > 0)
+	{
+		delete directionalLights[0];
+	}
+	while (children.size() > 0)
+	{
+		delete children[0];
+	}
 }
 
 void Scene::load_model_from_file(const char* filepath)
