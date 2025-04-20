@@ -1,4 +1,6 @@
 #include "object.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 
 Transformation::Transformation()
 {
@@ -147,20 +149,22 @@ maths::vec3f Transformation::backward()
 	return rotate_vector(maths::vec3f(0, -1, 0));
 }
 
-Object::Object(Scene* scene)
+Object::Object(Scene* scene, const char* name)
 {
 	this->scene = scene;
 	parent = NULL;
 	hasMesh = false;
 	mesh = 0;
+	objectName = name;
 }
 
-Object::Object(const char* filepath, Scene* scene)
+Object::Object(const char* filepath, Scene* scene, const char* name)
 {
 	this->scene = scene;
 	mesh = scene->load_mesh(filepath);
 	parent = NULL;
 	hasMesh = true;
+	objectName = name;
 }
 
 Object::~Object()
@@ -188,6 +192,7 @@ Object::~Object()
 	for (int childIndex = 0; childIndex < children.size(); childIndex++)
 	{
 		parentsList->push_back(children[childIndex]);
+		children[childIndex]->parent = parent;
 	}
 }
 
@@ -266,7 +271,7 @@ void Camera::aspectRatio(float newAspectRatio)
 	_aspectRatio = newAspectRatio;
 }
 
-Camera::Camera(Scene* newScene) : Object(newScene)
+Camera::Camera(Scene* newScene, const char* name) : Object(newScene, name)
 {
 	_fov = maths::PI / 2.0f;
 	_nearClip = 0.1f;
@@ -334,7 +339,7 @@ maths::mat4f Camera::view_matrix()
 	return view;
 }
 
-Light::Light(Scene* scene) : Object(scene)
+Light::Light(Scene* scene, const char* name) : Object(scene, name)
 {
 	_colour = maths::vec3f(1.0f, 1.0f, 1.0f);
 	_isDirty = true;
@@ -362,7 +367,7 @@ void Light::clean()
 	transformation.transformationMatrix();
 }
 
-AmbientLight::AmbientLight(Scene* scene) : Light(scene)
+AmbientLight::AmbientLight(Scene* scene, const char* name) : Light(scene, name)
 {
 	scene->ambientLights.push_back(this);
 }
@@ -380,7 +385,7 @@ AmbientLight::~AmbientLight()
 	}
 }
 
-PointLight::PointLight(Scene* scene) : Light(scene)
+PointLight::PointLight(Scene* scene, const char* name) : Light(scene, name)
 {
 	_constantAttenuation = 1.0f;
 	_linearAttenuation = 0.07f;
@@ -446,7 +451,7 @@ void PointLight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpa
 	_isDirty = false;
 }
 
-Spotlight::Spotlight(Scene* scene) : Light(scene)
+Spotlight::Spotlight(Scene* scene, const char* name) : Light(scene, name)
 {
 	_constantAttenuation = 1.0f;
 	_linearAttenuation = 0.07f;
@@ -538,7 +543,7 @@ void Spotlight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpac
 	_isDirty = false;
 }
 
-DirectionalLight::DirectionalLight(Scene* scene) : Light(scene)
+DirectionalLight::DirectionalLight(Scene* scene, const char* name) : Light(scene, name)
 {
 	scene->directionalLights.push_back(this);
 }
@@ -559,7 +564,7 @@ void DirectionalLight::add_to_uniform_buffer(unsigned int offset, maths::mat4f v
 {
 	if (forcePositionUpdate || _isDirty)
 	{
-		maths::vec4f transformed = viewSpaceMatrix * transformation.transformationMatrix() * maths::vec4f(0.0f, 0.0f, -1.0f, 0.0f);
+		maths::vec4f transformed = viewSpaceMatrix * transformation.transformationMatrix() * maths::vec4f(0.0f, 0.0f, 1.0f, 0.0f);
 		maths::vec3f direction = maths::vec3f(transformed.x, transformed.y, transformed.z);
 		glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, 12, &direction);
 	}

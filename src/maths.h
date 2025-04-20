@@ -119,7 +119,11 @@ namespace maths
 
 		static unit_quaternion from_axis_angle(maths::vec3f axis, float angle);
 
+		static unit_quaternion from_euler_angles(maths::vec3f angles);
+
 		mat4f to_rotation_matrix();
+
+		vec3f to_euler_angles();
 
 		unit_quaternion normalise();
 

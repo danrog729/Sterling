@@ -39,12 +39,6 @@
     <ClCompile Include="src\maths.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\oldscene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\oldmaterials.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -81,6 +75,9 @@
     <ClCompile Include="libs\imgui_impl_opengl3.cpp">
       <Filter>Libraries\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="src\menus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="libs\glfw3.lib">
@@ -100,9 +97,6 @@
     <ClInclude Include="include\KHR\khrplatform.h">
       <Filter>Libraries</Filter>
     </ClInclude>
-    <ClInclude Include="src\oldscene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -110,9 +104,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\shaders.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\oldmaterials.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mesh.h">
@@ -162,6 +153,9 @@
     </ClInclude>
     <ClInclude Include="include\imgui\imgui_impl_opengl3_loader.h">
       <Filter>Libraries\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\menus.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

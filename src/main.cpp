@@ -4,11 +4,6 @@
 #include "../include/glad/glad.h"
 #include "../include/GLFW/glfw3.h"
 
-#define IMGUI_IMPL_OPENGL_LOADER_GLAD
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
-
 #include "main.h"
 #include "shaders.h"
 #include "maths.h"
@@ -16,6 +11,7 @@
 #include "mesh.h"
 #include "scene.h"
 #include "object.h"
+#include "menus.h"
 
 Scene* scene;
 
@@ -63,58 +59,61 @@ int main()
 	// enable depth test
 	glEnable(GL_DEPTH_TEST);
 
-	// Set up imgui
-	ImGui::CreateContext();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init();
+	menus::setup(window);
 
 	// Set up the scene
 	scene = new Scene();
-	Object* crate = new Object("models/crate.obj", scene);
+	Object* crate = new Object("models/crate.obj", scene, "crate");
 	scene->add_object(crate);
 	crate->transformation.position(maths::vec3f(-0.97091f, 0.149841f, 1));
 	crate->transformation.rotation(maths::unit_quaternion(0.936256f, 0.0f, 0.0f, 0.351317f));
 
-	Object* crate2 = new Object("models/crate.obj", scene);
+	Object* crate2 = new Object("models/crate.obj", scene, "crate2");
 	scene->add_object(crate2);
 	crate2->transformation.position(maths::vec3f(-3.97091f, 2.149841f, 0.5f));
 	crate2->transformation.rotation(maths::unit_quaternion(0.96628f, 0.0f, 0.0f, 0.257492f));
 	crate2->transformation.scale(maths::vec3f(0.8f, 0.5f, 0.5f));
 	
-	Object* chair = new Object("models/chair.obj", scene);
+	Object* chair = new Object("models/chair.obj", scene, "chair");
 	scene->add_object(chair);
 	chair->transformation.position(maths::vec3f(0.5f, -0.5f, 0.0f));
 	chair->transformation.rotation(maths::unit_quaternion(sqrtf(2.0f)/2.0f, sqrtf(2.0f)/2.0f, 0, 0));
 	chair->transformation.scale(maths::vec3f(1.809f, 1.809f, 1.809f));
 
-	Object* plane = new Object("models/groundplane.obj", scene);
+	Object* plane = new Object("models/groundplane.obj", scene, "plane");
 	scene->add_object(plane);
 	plane->transformation.position(maths::vec3f(0.0f, 0.0f, 0.0f));
 	plane->transformation.rotation(maths::unit_quaternion(1, 0, 0, 0));
 	plane->transformation.scale(maths::vec3f(100.0f, 100.0f, 100.0f));
 
-	Camera* camera = new Camera(scene);
+	Camera* camera = new Camera(scene, "camera");
+	scene->add_object(camera);
 	camera->transformation.position(maths::vec3f(0, -5, 2.5));
 	camera->transformation.rotation(maths::unit_quaternion(sqrtf(2.0f) / 2.0f, sqrtf(2.0f) / 2.0f, 0, 0));
 	scene->activeCamera = camera;
 
-	AmbientLight* ambientLight = new AmbientLight(scene);
+	AmbientLight* ambientLight = new AmbientLight(scene, "ambient light");
+	scene->add_object(ambientLight);
 	ambientLight->colour(maths::vec3f(0.0f, 0.0f, 0.0f));
 
-	PointLight* pointLight = new PointLight(scene);
+	PointLight* pointLight = new PointLight(scene, "point light");
+	camera->add_child(pointLight);
 	pointLight->colour(maths::vec3f(1.0f, 1.0f, 1.0f));
 	pointLight->transformation.position(maths::vec3f(2.0f, 2.0f, 2.0f));
 
-	PointLight* pointLight2 = new PointLight(scene);
+	PointLight* pointLight2 = new PointLight(scene, "point light 2");
+	scene->add_object(pointLight2);
 	pointLight2->colour(maths::vec3f(1.0f, 0.0f, 0.0f));
 	pointLight2->transformation.position(maths::vec3f(-2.0f, -2.0f, 0.5f));
 
-	Spotlight* spotlight = new Spotlight(scene);
+	Spotlight* spotlight = new Spotlight(scene, "spotlight");
+	scene->add_object(spotlight);
 	spotlight->colour(maths::vec3f(1.0f, 1.0f, 0.5f));
 	spotlight->transformation.position(maths::vec3f(-0.97091f, 0.149841f, 3.9f));
 
-	DirectionalLight* directionalLight = new DirectionalLight(scene);
-	directionalLight->colour(maths::vec3f(0.0f, 1.0f, 1.0f));
+	DirectionalLight* directionalLight = new DirectionalLight(scene, "directional light");
+	scene->add_object(directionalLight);
+	directionalLight->colour(maths::vec3f(0.4f, 0.4f, 0.4f));
 	directionalLight->transformation.rotation(maths::unit_quaternion(0.92388f, -0.382683f, 0.0f, 0.0f));
 
 	// Render loop
@@ -128,18 +127,15 @@ int main()
 		// process inputs
 		sterling_process_inputs(window, deltaTime);
 
-		// Refresh imgui
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-		ImGui::ShowDemoWindow();
+		menus::refresh();
+		menus::scene_tree(scene);
+		menus::properties();
 
 		// Render the scene
 		scene->render();
 
-		// Render imgui
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		// Render ImGui windows
+		menus::render();
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -149,9 +145,7 @@ int main()
 		previousTime = currentTime;
 	}
 
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
+	menus::shutdown();
 	delete scene;
 	glfwTerminate();
 	return 0;

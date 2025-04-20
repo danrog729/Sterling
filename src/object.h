@@ -74,18 +74,19 @@ public:
 	/// The scene this object is a part of
 	/// </summary>
 	Scene* scene;
+	const char* objectName;
 
 	/// <summary>
 	/// Create a new object with no mesh
 	/// </summary>
 	/// <param name="scene">The scene to add the object to</param>
-	Object(Scene* scene);
+	Object(Scene* scene, const char* name);
 	/// <summary>
 	/// Create a new object
 	/// </summary>
 	/// <param name="filepath">The filepath to the mesh for this object to have</param>
 	/// <param name="scene">The scene to add the object to</param>
-	Object(const char* filepath, Scene* scene);
+	Object(const char* filepath, Scene* scene, const char* name);
 	/// <summary>
 	/// Destroy the object
 	/// </summary>
@@ -133,7 +134,7 @@ public:
 	float aspectRatio();
 	void aspectRatio(float newAspectRatio);
 
-	Camera(Scene* scene);
+	Camera(Scene* scene, const char* name);
 
 	~Camera() override;
 
@@ -164,7 +165,7 @@ public:
 
 	bool isDirty();
 
-	Light(Scene* scene);
+	Light(Scene* scene, const char* name);
 	virtual ~Light() override;
 
 	// Forcibly clear the isDirty flag
@@ -174,7 +175,7 @@ public:
 class AmbientLight : public Light
 {
 public:
-	AmbientLight(Scene* scene);
+	AmbientLight(Scene* scene, const char* name);
 	~AmbientLight() override;
 };
 
@@ -195,7 +196,7 @@ public:
 	float quadraticAttenuation();
 	void quadraticAttenuation(float newValue);
 
-	PointLight(Scene* scene);
+	PointLight(Scene* scene, const char* name);
 	~PointLight() override;
 
 	/// <summary>
@@ -230,7 +231,7 @@ public:
 	float outerCutoff();
 	void outerCutoff(float newValue);
 
-	Spotlight(Scene* scene);
+	Spotlight(Scene* scene, const char* name);
 	~Spotlight() override;
 
 	/// <summary>
@@ -245,7 +246,7 @@ public:
 class DirectionalLight : public Light
 {
 public:
-	DirectionalLight(Scene* scene);
+	DirectionalLight(Scene* scene, const char* name);
 	~DirectionalLight() override;
 
 	/// <summary>
