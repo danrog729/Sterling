@@ -142,4 +142,107 @@ public:
 	maths::mat4f view_matrix();
 };
 
+class Light : public Object
+{
+protected:
+	maths::vec3f _colour;
+	bool _isDirty;
+
+public:
+	/// <summary>
+	/// Represents the colour of the light
+	/// </summary>
+	maths::vec3f colour();
+	void colour(maths::vec3f newColour);
+
+	bool isDirty();
+
+	Light(Scene* scene);
+
+	// Forcibly clear the isDirty flag
+	void clean();
+};
+
+class AmbientLight : public Light
+{
+public:
+	AmbientLight(Scene* scene);
+};
+
+class PointLight : public Light
+{
+private:
+	float _constantAttenuation;
+	float _linearAttenuation;
+	float _quadraticAttenuation;
+public:
+	/// <summary>
+	/// Controls the attenuation of the light
+	/// </summary>
+	float constantAttenuation();
+	void constantAttenuation(float newValue);
+	float linearAttenuation();
+	void linearAttenuation(float newValue);
+	float quadraticAttenuation();
+	void quadraticAttenuation(float newValue);
+
+	PointLight(Scene* scene);
+
+	/// <summary>
+	/// Add this light's information to the currently bound uniform buffer, at a specified offset
+	/// </summary>
+	/// <param name="offset">The offset to add the light's information at</param>
+	/// <param name="viewSpaceMatrix">The matrix to transform light positions into the camera's view space</param>
+	/// <param name="forcePositionUpdate">Force the light positions to be updated, because the viewspace matrix has changed</param>
+	void add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate);
+};
+
+class Spotlight : public Light
+{
+private:
+	float _constantAttenuation;
+	float _linearAttenuation;
+	float _quadraticAttenuation;
+	float _innerCutoff;
+	float _outerCutoff;
+public:
+	/// <summary>
+	/// Controls the cutoff angles of the spotlight from the direction of the spotlight (in radians)
+	/// </summary>
+	float constantAttenuation();
+	void constantAttenuation(float newValue);
+	float linearAttenuation();
+	void linearAttenuation(float newValue);
+	float quadraticAttenuation();
+	void quadraticAttenuation(float newValue);
+	float innerCutoff();
+	void innerCutoff(float newValue);
+	float outerCutoff();
+	void outerCutoff(float newValue);
+
+	Spotlight(Scene* scene);
+
+	/// <summary>
+	/// Add this light's information to the currently bound uniform buffer, at a specified offset
+	/// </summary>
+	/// <param name="offset">The offset to add the light's information at</param>
+	/// <param name="viewSpaceMatrix">The matrix to transform light positions into the camera's view space</param>
+	/// <param name="forcePositionUpdate">Force the light positions to be updated, because the viewspace matrix has changed</param>
+	void add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate);
+};
+
+class DirectionalLight : public Light
+{
+public:
+	DirectionalLight(Scene* scene);
+
+	/// <summary>
+	/// Add this light's information to the currently bound uniform buffer, at a specified offset
+	/// </summary>
+	/// <param name="offset">The offset to add the light's information at</param>
+	/// <param name="viewSpaceMatrix">The matrix to transform light positions into the camera's view space</param>
+	/// <param name="forcePositionUpdate">Force the light positions to be updated, because the viewspace matrix has changed</param>
+	void add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate);
+};
+
 #endif

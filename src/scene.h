@@ -8,6 +8,11 @@
 
 class Object;
 class Camera;
+class AmbientLight;
+class AmbientLight;
+class PointLight;
+class Spotlight;
+class DirectionalLight;
 
 #include "fast_obj/fast_obj.h"
 
@@ -58,6 +63,19 @@ public:
 /// </summary>
 class Scene
 {
+private:
+	unsigned int lightBuffer;
+	maths::vec3f backgroundColour;
+	/// <summary>
+	/// Update the light positions in the light buffer on the GPU
+	/// </summary>
+	/// <param name="viewMatrix">The camera's view matrix</param>
+	/// <param name="updateLightPositions">Whether the view matrix has changed and the light positions should be updated anyway</param>
+	void update_ambient_lights();
+	void update_point_lights(maths::mat4f viewMatrix, bool updateLightPositions);
+	void update_spotlights(maths::mat4f viewMatrix, bool updateLightPositions);
+	void update_directional_lights(maths::mat4f viewMatrix, bool updateLightPositions);
+
 public:
 	/// <summary>
 	/// List of all of the meshes in the scene.
@@ -80,9 +98,21 @@ public:
 	/// </summary>
 	Camera* activeCamera;
 	/// <summary>
-	/// List of all of the lights in the scene
+	/// List of all of the ambient lights in the scene
 	/// </summary>
-	// std::vector<Light> lights;
+	std::vector<AmbientLight*> ambientLights;
+	/// <summary>
+	/// List of all of the point lights in the scene
+	/// </summary>
+	std::vector<PointLight*> pointLights;
+	/// <summary>
+	/// List of all of the spotlights in the scene
+	/// </summary>
+	std::vector<Spotlight*> spotlights;
+	/// <summary>
+	/// List of all of the directional lights in the scene
+	/// </summary>
+	std::vector<DirectionalLight*> directionalLights;
 	/// <summary>
 	/// List of all of the highest objects in the scene hierarchy
 	/// </summary>
@@ -104,6 +134,7 @@ public:
 	/// Initialise the mesh/material lists/dictionaries, the lights list and the object tree
 	/// </summary>
 	Scene();
+
 	/// <summary>
 	/// Ask the scene to load a .mesh file. Returns an index for the mesh in the mesh list.
 	/// </summary>

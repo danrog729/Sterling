@@ -40,6 +40,7 @@ namespace maths
 		static vec3f normalise(const vec3f vector);
 
 		vec3f operator*(float value);
+		vec3f operator/(float value);
 		vec3f operator+(const vec3f& vector);
 		vec3f operator-(const vec3f& vector);
 	};

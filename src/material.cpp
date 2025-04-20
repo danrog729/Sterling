@@ -57,9 +57,4 @@ void Material::use(maths::mat4f model)
 		glActiveTexture(GL_TEXTURE2);
 		specularMap->use();
 	}
-
-	shader->setVec3f("light.ambient", 0.1, 0.1, 0.1);
-	shader->setVec3f("light.position", 2, -2, 2);
-	shader->setVec3f("light.diffuse", 1, 1, 1);
-	shader->setVec3f("light.specular", 1, 1, 1);
 }

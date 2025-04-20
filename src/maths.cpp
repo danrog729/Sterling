@@ -38,6 +38,15 @@ maths::vec3f maths::vec3f::operator*(float value)
 	);
 }
 
+maths::vec3f maths::vec3f::operator/(float value)
+{
+	return maths::vec3f(
+		x / value,
+		y / value,
+		z / value
+	);
+}
+
 maths::vec3f maths::vec3f::operator+(const vec3f& vector)
 {
 	return maths::vec3f(

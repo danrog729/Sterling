@@ -6,12 +6,11 @@
 
 #include "main.h"
 #include "shaders.h"
-#include "oldmaterials.h"
 #include "maths.h"
-#include "oldscene.h"
 #include "textures.h"
 #include "mesh.h"
 #include "scene.h"
+#include "object.h"
 
 Scene* scene;
 
@@ -61,21 +60,52 @@ int main()
 
 	// Set up the scene
 	scene = new Scene();
-	Object* chair = new Object("models/crate.obj", scene);
-	scene->add_object(chair);
-	chair->transformation.position(maths::vec3f(-0.67091, -0.049841, 0));
-	chair->transformation.rotation(maths::unit_quaternion(0.935994, -0.022166, -0.008317, 0.351219));
-	
-	Object* crate = new Object("models/chair.obj", scene);
+	Object* crate = new Object("models/crate.obj", scene);
 	scene->add_object(crate);
-	crate->transformation.position(maths::vec3f(0.531813, -0.474596, 0.008897));
-	crate->transformation.rotation(maths::unit_quaternion(1, 0, 0, 0));
-	crate->transformation.scale(maths::vec3f(1.809, 1.809, 1.809));
+	crate->transformation.position(maths::vec3f(-0.97091f, 0.149841f, 1));
+	crate->transformation.rotation(maths::unit_quaternion(0.936256f, 0.0f, 0.0f, 0.351317f));
+
+	Object* crate2 = new Object("models/crate.obj", scene);
+	scene->add_object(crate2);
+	crate2->transformation.position(maths::vec3f(-3.97091f, 2.149841f, 0.5f));
+	crate2->transformation.rotation(maths::unit_quaternion(0.96628f, 0.0f, 0.0f, 0.257492f));
+	crate2->transformation.scale(maths::vec3f(0.8f, 0.5f, 0.5f));
+	
+	Object* chair = new Object("models/chair.obj", scene);
+	scene->add_object(chair);
+	chair->transformation.position(maths::vec3f(0.5f, -0.5f, 0.0f));
+	chair->transformation.rotation(maths::unit_quaternion(sqrtf(2.0f)/2.0f, sqrtf(2.0f)/2.0f, 0, 0));
+	chair->transformation.scale(maths::vec3f(1.809f, 1.809f, 1.809f));
+
+	Object* plane = new Object("models/groundplane.obj", scene);
+	scene->add_object(plane);
+	plane->transformation.position(maths::vec3f(0.0f, 0.0f, 0.0f));
+	plane->transformation.rotation(maths::unit_quaternion(1, 0, 0, 0));
+	plane->transformation.scale(maths::vec3f(100.0f, 100.0f, 100.0f));
 
 	Camera* camera = new Camera(scene);
 	camera->transformation.position(maths::vec3f(0, -5, 2.5));
 	camera->transformation.rotation(maths::unit_quaternion(sqrtf(2.0f) / 2.0f, sqrtf(2.0f) / 2.0f, 0, 0));
 	scene->activeCamera = camera;
+
+	AmbientLight* ambientLight = new AmbientLight(scene);
+	ambientLight->colour(maths::vec3f(0.0f, 0.0f, 0.0f));
+
+	PointLight* pointLight = new PointLight(scene);
+	pointLight->colour(maths::vec3f(1.0f, 1.0f, 1.0f));
+	pointLight->transformation.position(maths::vec3f(2.0f, 2.0f, 2.0f));
+
+	PointLight* pointLight2 = new PointLight(scene);
+	pointLight2->colour(maths::vec3f(1.0f, 0.0f, 0.0f));
+	pointLight2->transformation.position(maths::vec3f(-2.0f, -2.0f, 0.5f));
+
+	Spotlight* spotlight = new Spotlight(scene);
+	spotlight->colour(maths::vec3f(1.0f, 1.0f, 0.5f));
+	spotlight->transformation.position(maths::vec3f(-0.97091f, 0.149841f, 3.9f));
+
+	DirectionalLight* directionalLight = new DirectionalLight(scene);
+	directionalLight->colour(maths::vec3f(0.0f, 1.0f, 1.0f));
+	directionalLight->transformation.rotation(maths::unit_quaternion(0.92388f, -0.382683f, 0.0f, 0.0f));
 
 	// Render loop
 	double previousTime = 0;
@@ -87,10 +117,6 @@ int main()
 
 		// process inputs
 		sterling_process_inputs(window, deltaTime);
-
-		// clear screen
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Render the scene
 		scene->render();

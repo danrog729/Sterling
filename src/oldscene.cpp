@@ -22,7 +22,7 @@ void OldScene::render_branch(OldObject* branch, maths::mat4f projectionMatrix, m
 		&ambientLight, activeLight->position, new Colour(1.0f, 1.0f, 1.0f));
 }
 
-OldScene::OldScene(OldCamera* activeCam, Light* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue)
+OldScene::OldScene(OldCamera* activeCam, AmbientLight* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue)
 {
 	activeCamera = activeCam;
 	children = new ObjectList();
@@ -351,14 +351,14 @@ maths::vec3f OldCamera::down()
 }
 
 /*
-Light
+AmbientLight
 */
 
-Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : Empty(Position, Rotation, Scale, material)
+AmbientLight::AmbientLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : Empty(Position, Rotation, Scale, material)
 {
 
 }
-Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material, const char* meshPath) : Empty(Position, Rotation, Scale, material, meshPath)
+AmbientLight::AmbientLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material, const char* meshPath) : Empty(Position, Rotation, Scale, material, meshPath)
 {
 
 }
@@ -367,7 +367,7 @@ Light::Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3
 PointLight
 */
 
-PointLight::PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : Light(Position, Rotation, Scale, material, "models/pointlight.mdl")
+PointLight::PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material) : AmbientLight(Position, Rotation, Scale, material, "models/pointlight.mdl")
 {
 
 }

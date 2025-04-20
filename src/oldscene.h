@@ -13,7 +13,7 @@ class OldObject;
 class Empty;
 class OldCamera;
 class Axes;
-class Light;
+class AmbientLight;
 class PointLight;
 class Model;
 class Cube;
@@ -25,11 +25,11 @@ private:
 	void render_branch(OldObject* branch, maths::mat4f projectionMatrix, maths::mat4f viewMatrix, maths::mat4f parentToWorld);
 public:
 	OldCamera* activeCamera;
-	Light* activeLight;
+	AmbientLight* activeLight;
 	ObjectList* children;
 	Colour ambientLight;
 
-	OldScene(OldCamera* activeCam, Light* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue);
+	OldScene(OldCamera* activeCam, AmbientLight* ActiveLight, float ambientRed, float ambientGreen, float ambientBlue);
 
 	void render();
 };
@@ -171,14 +171,14 @@ public:
 	maths::vec3f down();
 };
 
-class Light : public Empty
+class AmbientLight : public Empty
 {
 public:
-	Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material);
-	Light(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader, const char* meshPath);
+	AmbientLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material);
+	AmbientLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* shader, const char* meshPath);
 };
 
-class PointLight : public Light
+class PointLight : public AmbientLight
 {
 public:
 	PointLight(maths::vec3f Position, maths::unit_quaternion Rotation, maths::vec3f Scale, OldMaterial* material);

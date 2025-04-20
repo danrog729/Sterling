@@ -285,14 +285,194 @@ maths::mat4f Camera::projection_matrix()
 
 maths::mat4f Camera::view_matrix()
 {
-	maths::mat4f view = transformation.inverseMatrix();
+	maths::mat4f view = maths::mat4f::stretch_z(-1.0f) * transformation.inverseMatrix();
 	if (transformation.changedOnLastAccess())
 	{
 		// update the GPU buffer
-		maths::mat4f transposed = maths::mat4f::transpose(maths::mat4f::stretch_z(-1.0f) * view);
+		maths::mat4f transposed = maths::mat4f::transpose(view);
 		glBindBuffer(GL_UNIFORM_BUFFER, matrixBuffer);
 		glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, &transposed);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}
 	return view;
+}
+
+Light::Light(Scene* scene) : Object(scene)
+{
+	_colour = maths::vec3f(1.0f, 1.0f, 1.0f);
+	_isDirty = true;
+}
+maths::vec3f Light::colour()
+{
+	return _colour;
+}
+void Light::colour(maths::vec3f newColour)
+{
+	_colour = newColour;
+	_isDirty = true;
+}
+bool Light::isDirty()
+{
+	return _isDirty || transformation.changedOnLastAccess();
+}
+void Light::clean()
+{
+	_isDirty = false;
+	transformation.transformationMatrix();
+}
+
+AmbientLight::AmbientLight(Scene* scene) : Light(scene)
+{
+	scene->ambientLights.push_back(this);
+}
+
+PointLight::PointLight(Scene* scene) : Light(scene)
+{
+	_constantAttenuation = 1.0f;
+	_linearAttenuation = 0.07f;
+	_quadraticAttenuation = 0.017f;
+	scene->pointLights.push_back(this);
+}
+float PointLight::constantAttenuation()
+{
+	return _constantAttenuation;
+}
+void PointLight::constantAttenuation(float newValue)
+{
+	_constantAttenuation = newValue;
+	_isDirty = true;
+}
+float PointLight::linearAttenuation()
+{
+	return _linearAttenuation;
+}
+void PointLight::linearAttenuation(float newValue)
+{
+	_linearAttenuation = newValue;
+	_isDirty = true;
+}
+float PointLight::quadraticAttenuation()
+{
+	return _quadraticAttenuation;
+}
+void PointLight::quadraticAttenuation(float newValue)
+{
+	_quadraticAttenuation = newValue;
+	_isDirty = true;
+}
+void PointLight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate)
+{
+	if (forcePositionUpdate || _isDirty)
+	{
+		maths::vec3f position = transformation.position();
+		maths::vec4f transformed = viewSpaceMatrix * maths::vec4f(position.x, position.y, position.z, 1.0f);
+		position = maths::vec3f(transformed.x, transformed.y, transformed.z);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, 12, &position);
+	}
+	if (_isDirty)
+	{
+		glBufferSubData(GL_UNIFORM_BUFFER, offset, 12, &_colour);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 28, 4, &_constantAttenuation);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 32, 4, &_linearAttenuation);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 36, 4, &_quadraticAttenuation);
+	}
+	_isDirty = false;
+}
+
+Spotlight::Spotlight(Scene* scene) : Light(scene)
+{
+	_constantAttenuation = 1.0f;
+	_linearAttenuation = 0.07f;
+	_quadraticAttenuation = 0.017f;
+	_innerCutoff = 0.45f;
+	_outerCutoff = maths::PI / 6;
+	scene->spotlights.push_back(this);
+}
+float Spotlight::constantAttenuation()
+{
+	return _constantAttenuation;
+}
+void Spotlight::constantAttenuation(float newValue)
+{
+	_constantAttenuation = newValue;
+	_isDirty = true;
+}
+float Spotlight::linearAttenuation()
+{
+	return _linearAttenuation;
+}
+void Spotlight::linearAttenuation(float newValue)
+{
+	_linearAttenuation = newValue;
+	_isDirty = true;
+}
+float Spotlight::quadraticAttenuation()
+{
+	return _quadraticAttenuation;
+}
+void Spotlight::quadraticAttenuation(float newValue)
+{
+	_quadraticAttenuation = newValue;
+	_isDirty = true;
+}
+float Spotlight::innerCutoff()
+{
+	return _innerCutoff;
+}
+void Spotlight::innerCutoff(float newValue)
+{
+	_innerCutoff = newValue;
+	_isDirty = true;
+}
+float Spotlight::outerCutoff()
+{
+	return _outerCutoff;
+}
+void Spotlight::outerCutoff(float newValue)
+{
+	_outerCutoff = newValue;
+	_isDirty = true;
+}
+void Spotlight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate)
+{
+	if (forcePositionUpdate || _isDirty)
+	{
+		maths::vec3f position = transformation.position();
+		maths::vec4f transformed = viewSpaceMatrix * maths::vec4f(position.x, position.y, position.z, 1.0f);
+		position = maths::vec3f(transformed.x, transformed.y, transformed.z);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, 12, &position);
+
+		transformed = viewSpaceMatrix * transformation.transformationMatrix() * maths::vec4f(0.0f, 0.0f, -1.0f, 0.0f);
+		maths::vec3f direction = maths::vec3f(transformed.x, transformed.y, transformed.z);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 32, 12, &direction);
+	}
+	if (_isDirty)
+	{
+		glBufferSubData(GL_UNIFORM_BUFFER, offset, 12, &_colour);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 44, 4, &_constantAttenuation);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 48, 4, &_linearAttenuation);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 52, 4, &_quadraticAttenuation);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 56, 4, &_innerCutoff);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 60, 4, &_outerCutoff);
+	}
+	_isDirty = false;
+}
+
+DirectionalLight::DirectionalLight(Scene* scene) : Light(scene)
+{
+	scene->directionalLights.push_back(this);
+}
+void DirectionalLight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate)
+{
+	if (forcePositionUpdate || _isDirty)
+	{
+		maths::vec4f transformed = viewSpaceMatrix * transformation.transformationMatrix() * maths::vec4f(0.0f, 0.0f, -1.0f, 0.0f);
+		maths::vec3f direction = maths::vec3f(transformed.x, transformed.y, transformed.z);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, 12, &direction);
+	}
+	if (_isDirty)
+	{
+		glBufferSubData(GL_UNIFORM_BUFFER, offset, 12, &_colour);
+	}
+	_isDirty = false;
 }
