@@ -63,24 +63,24 @@ int main()
 
 	// Set up the scene
 	scene = new Scene();
-	Object* crate = new Object("models/crate.obj", scene, "crate");
+	Object* crate = new Object("models/crate.object", scene, "crate");
 	scene->add_object(crate);
 	crate->transformation.position(maths::vec3f(-0.97091f, 0.149841f, 1));
 	crate->transformation.rotation(maths::unit_quaternion(0.936256f, 0.0f, 0.0f, 0.351317f));
 
-	Object* crate2 = new Object("models/crate.obj", scene, "crate2");
+	Object* crate2 = new Object("models/crate.object", scene, "crate2");
 	scene->add_object(crate2);
 	crate2->transformation.position(maths::vec3f(-3.97091f, 2.149841f, 0.5f));
 	crate2->transformation.rotation(maths::unit_quaternion(0.96628f, 0.0f, 0.0f, 0.257492f));
 	crate2->transformation.scale(maths::vec3f(0.8f, 0.5f, 0.5f));
 	
-	Object* chair = new Object("models/chair.obj", scene, "chair");
+	Object* chair = new Object("models/chair.object", scene, "chair");
 	scene->add_object(chair);
 	chair->transformation.position(maths::vec3f(0.5f, -0.5f, 0.0f));
 	chair->transformation.rotation(maths::unit_quaternion(sqrtf(2.0f)/2.0f, sqrtf(2.0f)/2.0f, 0, 0));
 	chair->transformation.scale(maths::vec3f(1.809f, 1.809f, 1.809f));
 
-	Object* plane = new Object("models/groundplane.obj", scene, "plane");
+	Object* plane = new Object("models/groundplane.object", scene, "plane");
 	scene->add_object(plane);
 	plane->transformation.position(maths::vec3f(0.0f, 0.0f, 0.0f));
 	plane->transformation.rotation(maths::unit_quaternion(1, 0, 0, 0));
