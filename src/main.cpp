@@ -130,6 +130,7 @@ int main()
 		menus::refresh();
 		menus::scene_tree(scene);
 		menus::properties();
+		ImGui::ShowDemoWindow();
 
 		// Render the scene
 		scene->render();

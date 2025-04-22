@@ -49,6 +49,12 @@ namespace menus
 	/// <param name="object">The object to add</param>
 	void object_tree(Object* object);
 	extern Object* selectedObject;
+	extern Camera* selectedCamera;
+	extern Light* selectedLight;
+	extern AmbientLight* selectedAmbientLight;
+	extern PointLight* selectedPointLight;
+	extern Spotlight* selectedSpotlight;
+	extern DirectionalLight* selectedDirectionalLight;
 
 	/// <summary>
 	/// Display a window for the properties of the selected object

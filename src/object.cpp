@@ -10,7 +10,7 @@ Transformation::Transformation()
 		0, 0, 1, 0, 
 		0, 0, 0, 1
 	);
-	_inverseMatrix = maths::mat4f(
+	_inverseMatrixNoScale = maths::mat4f(
 		1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
@@ -20,7 +20,7 @@ Transformation::Transformation()
 	_rotation = maths::unit_quaternion(1, 0, 0, 0);
 	_scale = maths::vec3f(1, 1, 1);
 	isDirty = false;
-	isInverseDirty = false;
+	isInverseNoScaleDirty = false;
 	_changedOnLastAccess = true;
 }
 
@@ -51,11 +51,11 @@ maths::mat4f Transformation::transformationMatrix()
 	return _transformationMatrix;
 }
 
-maths::mat4f Transformation::inverseMatrix()
+maths::mat4f Transformation::inverseMatrixNoScale()
 {
-	if (isInverseDirty)
+	if (isInverseNoScaleDirty)
 	{
-		isInverseDirty = false;
+		isInverseNoScaleDirty = false;
 		_changedOnLastAccess = true;
 		maths::mat4f translationMatrix = maths::mat4f(
 			1, 0, 0, -_position.x,
@@ -63,19 +63,13 @@ maths::mat4f Transformation::inverseMatrix()
 			0, 0, 1, -_position.z,
 			0, 0, 0, 1
 		);
-		maths::mat4f scaleMatrix = maths::mat4f(
-			1 / _scale.x, 0, 0, 0,
-			0, 1 / _scale.y, 0, 0,
-			0, 0, 1 / _scale.z, 0,
-			0, 0, 0, 1
-		);
-		_inverseMatrix = scaleMatrix * _rotation.conjugate().to_rotation_matrix() * translationMatrix;
+		_inverseMatrixNoScale = _rotation.conjugate().to_rotation_matrix() * translationMatrix;
 	}
 	else
 	{
 		_changedOnLastAccess = false;
 	}
-	return _inverseMatrix;
+	return _inverseMatrixNoScale;
 }
 
 bool Transformation::changedOnLastAccess()
@@ -91,7 +85,7 @@ void Transformation::position(maths::vec3f newPosition)
 {
 	_position = newPosition;
 	isDirty = true;
-	isInverseDirty = true;
+	isInverseNoScaleDirty = true;
 	_changedOnLastAccess = true;
 }
 
@@ -103,7 +97,7 @@ void Transformation::rotation(maths::unit_quaternion newRotation)
 {
 	_rotation = newRotation;
 	isDirty = true;
-	isInverseDirty = true;
+	isInverseNoScaleDirty = true;
 	_changedOnLastAccess = true;
 }
 
@@ -115,7 +109,7 @@ void Transformation::scale(maths::vec3f newScale)
 {
 	_scale = newScale;
 	isDirty = true;
-	isInverseDirty = true;
+	isInverseNoScaleDirty = true;
 	_changedOnLastAccess = true;
 }
 
@@ -201,6 +195,30 @@ void Object::add_child(Object* child)
 	children.push_back(child);
 	child->parent = this;
 	child->scene = scene;
+}
+
+void Object::remove_from_parent()
+{
+	std::vector<Object*>* parentsList;
+	if (parent == NULL)
+	{
+		parentsList = &scene->children;
+	}
+	else
+	{
+		parentsList = &parent->children;
+	}
+	// remove from parent's child list
+	bool found = false;
+	for (int childIndex = 0; childIndex < parentsList->size() && !found; childIndex++)
+	{
+		if ((*parentsList)[childIndex] == this)
+		{
+			found = true;
+			parentsList->erase(parentsList->begin() + childIndex);
+		}
+	}
+	parent = NULL;
 }
 
 maths::mat4f Object::get_global_matrix()
@@ -327,8 +345,15 @@ maths::mat4f Camera::projection_matrix()
 
 maths::mat4f Camera::view_matrix()
 {
-	maths::mat4f view = maths::mat4f::stretch_z(-1.0f) * transformation.inverseMatrix();
-	if (transformation.changedOnLastAccess())
+	maths::mat4f parentSpace = maths::mat4f(); // identity matrix
+	bool update = false;
+	if (parent != NULL)
+	{
+		parentSpace = parent->transformation.inverseMatrixNoScale();
+		update = parent->transformation.changedOnLastAccess();
+	}
+	maths::mat4f view = maths::mat4f::stretch_z(-1.0f) * transformation.inverseMatrixNoScale() * parentSpace;
+	if (transformation.changedOnLastAccess() || update)
 	{
 		// update the GPU buffer
 		maths::mat4f transposed = maths::mat4f::transpose(view);
@@ -434,13 +459,10 @@ void PointLight::quadraticAttenuation(float newValue)
 }
 void PointLight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate)
 {
-	if (forcePositionUpdate || _isDirty)
-	{
-		maths::vec3f position = transformation.position();
-		maths::vec4f transformed = viewSpaceMatrix * maths::vec4f(position.x, position.y, position.z, 1.0f);
-		position = maths::vec3f(transformed.x, transformed.y, transformed.z);
-		glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, 12, &position);
-	}
+	maths::mat4f globalMatrix = get_global_matrix();
+	maths::vec4f transformed = viewSpaceMatrix * globalMatrix * maths::vec4f(0.0f, 0.0f, 0.0f, 1.0f);
+	maths::vec3f position = maths::vec3f(transformed.x, transformed.y, transformed.z);
+	glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, 12, &position);
 	if (_isDirty)
 	{
 		glBufferSubData(GL_UNIFORM_BUFFER, offset, 12, &_colour);
@@ -520,17 +542,15 @@ void Spotlight::outerCutoff(float newValue)
 }
 void Spotlight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate)
 {
-	if (forcePositionUpdate || _isDirty)
-	{
-		maths::vec3f position = transformation.position();
-		maths::vec4f transformed = viewSpaceMatrix * maths::vec4f(position.x, position.y, position.z, 1.0f);
-		position = maths::vec3f(transformed.x, transformed.y, transformed.z);
-		glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, 12, &position);
+	maths::mat4f globalMatrix = get_global_matrix();
+	maths::vec4f transformed = viewSpaceMatrix * globalMatrix * maths::vec4f(0.0f, 0.0f, 0.0f, 1.0f);
+	maths::vec3f position = maths::vec3f(transformed.x, transformed.y, transformed.z);
+	glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, 12, &position);
 
-		transformed = viewSpaceMatrix * transformation.transformationMatrix() * maths::vec4f(0.0f, 0.0f, -1.0f, 0.0f);
-		maths::vec3f direction = maths::vec3f(transformed.x, transformed.y, transformed.z);
-		glBufferSubData(GL_UNIFORM_BUFFER, offset + 32, 12, &direction);
-	}
+	transformed = viewSpaceMatrix * globalMatrix * maths::vec4f(0.0f, 0.0f, -1.0f, 0.0f);
+	maths::vec3f direction = maths::vec3f(transformed.x, transformed.y, transformed.z);
+	glBufferSubData(GL_UNIFORM_BUFFER, offset + 32, 12, &direction);
+
 	if (_isDirty)
 	{
 		glBufferSubData(GL_UNIFORM_BUFFER, offset, 12, &_colour);
@@ -562,9 +582,9 @@ DirectionalLight::~DirectionalLight()
 }
 void DirectionalLight::add_to_uniform_buffer(unsigned int offset, maths::mat4f viewSpaceMatrix, bool forcePositionUpdate)
 {
-	if (forcePositionUpdate || _isDirty)
+	if (forcePositionUpdate || _isDirty || transformation.changedOnLastAccess())
 	{
-		maths::vec4f transformed = viewSpaceMatrix * transformation.transformationMatrix() * maths::vec4f(0.0f, 0.0f, 1.0f, 0.0f);
+		maths::vec4f transformed = viewSpaceMatrix * get_global_matrix() * maths::vec4f(0.0f, 0.0f, 1.0f, 0.0f);
 		maths::vec3f direction = maths::vec3f(transformed.x, transformed.y, transformed.z);
 		glBufferSubData(GL_UNIFORM_BUFFER, offset + 16, 12, &direction);
 	}

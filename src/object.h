@@ -12,12 +12,12 @@ struct Transformation
 {
 private:
 	maths::mat4f _transformationMatrix;
-	maths::mat4f _inverseMatrix;
+	maths::mat4f _inverseMatrixNoScale;
 	maths::vec3f _position;
 	maths::unit_quaternion _rotation;
 	maths::vec3f _scale;
 	bool isDirty;
-	bool isInverseDirty;
+	bool isInverseNoScaleDirty;
 	bool _changedOnLastAccess;
 
 public:
@@ -26,7 +26,7 @@ public:
 
 	// getters, setters
 	maths::mat4f transformationMatrix();
-	maths::mat4f inverseMatrix();
+	maths::mat4f inverseMatrixNoScale();
 	bool changedOnLastAccess();
 
 	maths::vec3f position();
@@ -97,6 +97,10 @@ public:
 	/// </summary>
 	/// <param name="child">The object to add as a child</param>
 	void add_child(Object* child);
+	/// <summary>
+	/// Remove this object from its parent's child list
+	/// </summary>
+	void remove_from_parent();
 	/// <summary>
 	/// Get the matrix to transform local space to absolute world space. Combines the matrices of all parent objects.
 	/// </summary>
