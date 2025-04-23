@@ -1,5 +1,6 @@
 #include "menus.h"
 #include "maths.h"
+#include "primitives.h"
 
 namespace menus
 {
@@ -43,6 +44,16 @@ namespace menus
 		ImGui::Begin("Tree View");
 		if (ImGui::TreeNodeEx("Scene", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			if (ImGui::IsItemClicked())
+			{
+				selectedObject = NULL;
+				selectedCamera = NULL;
+				selectedLight = NULL;
+				selectedAmbientLight = NULL;
+				selectedPointLight = NULL;
+				selectedSpotlight = NULL;
+				selectedDirectionalLight = NULL;
+			}
 			if (ImGui::BeginDragDropTarget())
 			{
 				// place down an object
@@ -56,16 +67,45 @@ namespace menus
 				}
 				ImGui::EndDragDropTarget();
 			}
+			unsigned int id = 0;
 			for (int childIndex = 0; childIndex < scene->children.size(); childIndex++)
 			{
-				menus::object_tree(scene->children[childIndex]);
+				menus::object_tree(scene->children[childIndex], &id);
 			}
 			ImGui::TreePop();
+		}
+		if (ImGui::Button("Add Object"))
+		{
+			ImGui::OpenPopup("Add Object");
+		}
+		if (ImGui::BeginPopup("Add Object"))
+		{
+			if (ImGui::Button("Add Cube"))
+			{
+				ImGui::CloseCurrentPopup();
+				scene->add_object(primitives::cube(scene, "cube"));
+			}
+			ImGui::EndPopup();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Delete Object"))
+		{
+			if (selectedObject != NULL)
+			{
+				delete selectedObject;
+				selectedObject = NULL;
+				selectedCamera = NULL;
+				selectedLight = NULL;
+				selectedAmbientLight = NULL;
+				selectedPointLight = NULL;
+				selectedSpotlight = NULL;
+				selectedDirectionalLight = NULL;
+			}
 		}
 		ImGui::End();
 	}
 
-	void menus::object_tree(Object* object)
+	void menus::object_tree(Object* object, unsigned int* ID)
 	{
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
 		if (object->children.size() == 0)
@@ -76,7 +116,11 @@ namespace menus
 		{
 			flags |= ImGuiTreeNodeFlags_Selected;
 		}
-		if (ImGui::TreeNodeEx(object->objectName, flags))
+		std::string string = object->objectName;
+		string += "##";
+		string += std::to_string(*ID);
+		(*ID)++;
+		if (ImGui::TreeNodeEx(string.c_str(), flags))
 		{
 			if (ImGui::IsItemClicked())
 			{
@@ -110,7 +154,7 @@ namespace menus
 			}
 			for (int childIndex = 0; childIndex < object->children.size(); childIndex++)
 			{
-				menus::object_tree(object->children[childIndex]);
+				menus::object_tree(object->children[childIndex], ID);
 			}
 			ImGui::TreePop();
 		}

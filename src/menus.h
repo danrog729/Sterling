@@ -47,7 +47,7 @@ namespace menus
 	/// Add an object and its children to the scene tree
 	/// </summary>
 	/// <param name="object">The object to add</param>
-	void object_tree(Object* object);
+	void object_tree(Object* object, unsigned int* ID);
 	extern Object* selectedObject;
 	extern Camera* selectedCamera;
 	extern Light* selectedLight;

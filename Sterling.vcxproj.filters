@@ -78,6 +78,9 @@
     <ClCompile Include="src\menus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\primitives.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="libs\glfw3.lib">
@@ -155,6 +158,9 @@
       <Filter>Libraries\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="src\menus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\primitives.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

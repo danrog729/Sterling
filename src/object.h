@@ -50,14 +50,12 @@ public:
 
 class Object
 {
-private:
-	bool hasMesh;
-
 public:
 	/// <summary>
 	/// Index into the scene's mesh list for which mesh this object should include
 	/// </summary>
 	int mesh;
+	bool hasMesh;
 	/// <summary>
 	/// The position, rotation and scale of the object
 	/// </summary>

@@ -12,6 +12,7 @@
 #include "scene.h"
 #include "object.h"
 #include "menus.h"
+#include "primitives.h"
 
 Scene* scene;
 
@@ -68,7 +69,7 @@ int main()
 	crate->transformation.position(maths::vec3f(-0.97091f, 0.149841f, 1));
 	crate->transformation.rotation(maths::unit_quaternion(0.936256f, 0.0f, 0.0f, 0.351317f));
 
-	Object* crate2 = new Object("models/crate.object", scene, "crate2");
+	Object* crate2 = new Object("models/crate.object", scene, "crate");
 	scene->add_object(crate2);
 	crate2->transformation.position(maths::vec3f(-3.97091f, 2.149841f, 0.5f));
 	crate2->transformation.rotation(maths::unit_quaternion(0.96628f, 0.0f, 0.0f, 0.257492f));
@@ -115,6 +116,9 @@ int main()
 	scene->add_object(directionalLight);
 	directionalLight->colour(maths::vec3f(0.4f, 0.4f, 0.4f));
 	directionalLight->transformation.rotation(maths::unit_quaternion(0.92388f, -0.382683f, 0.0f, 0.0f));
+
+	Object* cube = primitives::cube(scene, "cube");
+	scene->add_object(cube);
 
 	// Render loop
 	double previousTime = 0;
