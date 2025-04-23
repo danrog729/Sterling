@@ -85,6 +85,16 @@ namespace menus
 				ImGui::CloseCurrentPopup();
 				scene->add_object(primitives::cube(scene, "cube"));
 			}
+			if (ImGui::Button("Add Plane"))
+			{
+				ImGui::CloseCurrentPopup();
+				scene->add_object(primitives::plane(scene, "plane"));
+			}
+			if (ImGui::Button("Add Sphere"))
+			{
+				ImGui::CloseCurrentPopup();
+				scene->add_object(primitives::sphere(scene, "sphere", 8, 8));
+			}
 			ImGui::EndPopup();
 		}
 		ImGui::SameLine();

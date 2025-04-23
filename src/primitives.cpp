@@ -1,6 +1,7 @@
 #include "primitives.h"
 #include "mesh.h"
 #include "material.h"
+#include "maths.h"
 
 namespace primitives
 {
@@ -46,6 +47,96 @@ namespace primitives
 		primitive->faces.push_back(Face(20, 22, 23));
 		
 		primitive->setup();
+
+		Mesh* mesh = new Mesh();
+		mesh->primitives.push_back(primitive);
+		scene->meshes.push_back(mesh);
+
+		Object* object = new Object(scene, name);
+		object->mesh = scene->meshes.size() - 1;
+		object->hasMesh = true;
+
+		Material* material = new Material("shaders/shaded.vert", "shaders/shaded.frag");
+		material->ambientColour = maths::vec3f(0, 0, 0);
+		material->diffuseColour = maths::vec3f(0.8, 0.8, 0.8);
+		material->specularColour = maths::vec3f(0.8, 0.8, 0.8);
+		material->shininess = 32;
+		scene->materials.push_back(material);
+		primitive->materialIndex = scene->materials.size() - 1;
+
+		return object;
+	}
+
+	Object* plane(Scene* scene, const char* name)
+	{
+		MeshPrimitive* primitive = new MeshPrimitive();
+
+		primitive->vertices.push_back(Vertex(maths::vec3f(-1, -1, 0), maths::vec3f(0, 0, 1), maths::vec2f(0, 0)));
+		primitive->vertices.push_back(Vertex(maths::vec3f(-1, 1, 0), maths::vec3f(0, 0, 1), maths::vec2f(0, 1)));
+		primitive->vertices.push_back(Vertex(maths::vec3f(1, -1, 0), maths::vec3f(0, 0, 1), maths::vec2f(1, 0)));
+		primitive->vertices.push_back(Vertex(maths::vec3f(1, 1, 0), maths::vec3f(0, 0, 1), maths::vec2f(1, 1)));
+		primitive->faces.push_back(Face(0, 1, 2));
+		primitive->faces.push_back(Face(1, 2, 3));
+
+		primitive->setup();
+
+		Mesh* mesh = new Mesh();
+		mesh->primitives.push_back(primitive);
+		scene->meshes.push_back(mesh);
+
+		Object* object = new Object(scene, name);
+		object->mesh = scene->meshes.size() - 1;
+		object->hasMesh = true;
+
+		Material* material = new Material("shaders/shaded.vert", "shaders/shaded.frag");
+		material->ambientColour = maths::vec3f(0, 0, 0);
+		material->diffuseColour = maths::vec3f(0.8, 0.8, 0.8);
+		material->specularColour = maths::vec3f(0.8, 0.8, 0.8);
+		material->shininess = 32;
+		scene->materials.push_back(material);
+		primitive->materialIndex = scene->materials.size() - 1;
+
+		return object;
+	}
+
+	Object* sphere(Scene* scene, const char* name, int horizontalResolution, int verticalResolution)
+	{
+		MeshPrimitive* primitive = new MeshPrimitive();
+
+		float verticalRadianStep = maths::PI / (verticalResolution - 1);
+		float horizontalRadianStep = 2 * maths::PI / (horizontalResolution - 1);
+		float localRadius = 0;
+		for (int vertical = 0; vertical < verticalResolution; vertical++)
+		{
+			int localHorizontalRes = horizontalResolution;
+			localRadius = sinf(verticalRadianStep * vertical);
+			if (vertical == 0 || vertical == verticalResolution - 1)
+			{
+				localHorizontalRes = 1;
+			}
+			for (int horizontal = 0; horizontal < localHorizontalRes; horizontal++)
+			{
+				primitive->vertices.push_back(Vertex(
+					maths::vec3f(cosf(horizontalRadianStep * horizontal) * localRadius, sinf(horizontalRadianStep * horizontal) * localRadius, 1 - 2 * ((float)vertical/verticalResolution)),
+					maths::vec3f(0, 0, 1),
+					maths::vec2f(0, 0)
+				));
+			}
+		}
+		// top triangle fan
+		for (int vertex = 0; vertex < horizontalResolution; vertex++)
+		{
+			primitive->faces.push_back(Face(
+				0, vertex + 1, vertex + 2
+			));
+		}
+		// bottom triangle fan
+		for (int vertex = 0; vertex < horizontalResolution; vertex++)
+		{
+			primitive->faces.push_back(Face(
+				primitive->vertices.size() - 1, primitive->vertices.size() - 2 - vertex, primitive->vertices.size() - 3 - vertex
+			));
+		}
 
 		Mesh* mesh = new Mesh();
 		mesh->primitives.push_back(primitive);

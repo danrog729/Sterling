@@ -117,9 +117,6 @@ int main()
 	directionalLight->colour(maths::vec3f(0.4f, 0.4f, 0.4f));
 	directionalLight->transformation.rotation(maths::unit_quaternion(0.92388f, -0.382683f, 0.0f, 0.0f));
 
-	Object* cube = primitives::cube(scene, "cube");
-	scene->add_object(cube);
-
 	// Render loop
 	double previousTime = 0;
 	while (!glfwWindowShouldClose(window))
