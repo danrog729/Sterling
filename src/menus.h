@@ -60,6 +60,12 @@ namespace menus
 	/// Display a window for the properties of the selected object
 	/// </summary>
 	void properties();
+
+	/// <summary>
+	/// Show the settings for the rendering
+	/// </summary>
+	void settings();
+	extern bool wireframe;
 }
 
 #endif

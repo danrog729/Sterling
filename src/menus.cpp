@@ -11,6 +11,7 @@ namespace menus
 	PointLight* selectedPointLight = NULL;
 	Spotlight* selectedSpotlight = NULL;
 	DirectionalLight* selectedDirectionalLight = NULL;
+	bool wireframe = false;
 
 	void menus::setup(GLFWwindow* window)
 	{
@@ -93,7 +94,7 @@ namespace menus
 			if (ImGui::Button("Add Sphere"))
 			{
 				ImGui::CloseCurrentPopup();
-				scene->add_object(primitives::sphere(scene, "sphere", 8, 8));
+				scene->add_object(primitives::sphere(scene, "sphere", 32, 17));
 			}
 			ImGui::EndPopup();
 		}
@@ -391,6 +392,15 @@ namespace menus
 		else
 		{
 			ImGui::Text("No object selected.");
+		}
+		ImGui::End();
+	}
+
+	void menus::settings()
+	{
+		if (ImGui::Begin("Settings"))
+		{
+			ImGui::Checkbox("Wireframe", &wireframe);
 		}
 		ImGui::End();
 	}

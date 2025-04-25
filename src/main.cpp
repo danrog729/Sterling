@@ -119,6 +119,7 @@ int main()
 
 	// Render loop
 	double previousTime = 0;
+	bool wasWireframe = false;
 	while (!glfwWindowShouldClose(window))
 	{
 		// Calculate delta time
@@ -131,6 +132,17 @@ int main()
 		menus::refresh();
 		menus::scene_tree(scene);
 		menus::properties();
+		menus::settings();
+		if (menus::wireframe && !wasWireframe)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			wasWireframe = true;
+		}
+		else if (!menus::wireframe && wasWireframe)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			wasWireframe = false;
+		}
 		ImGui::ShowDemoWindow();
 
 		// Render the scene

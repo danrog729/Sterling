@@ -104,7 +104,7 @@ namespace primitives
 		MeshPrimitive* primitive = new MeshPrimitive();
 
 		float verticalRadianStep = maths::PI / (verticalResolution - 1);
-		float horizontalRadianStep = 2 * maths::PI / (horizontalResolution - 1);
+		float horizontalRadianStep = 2 * maths::PI / horizontalResolution;
 		float localRadius = 0;
 		for (int vertical = 0; vertical < verticalResolution; vertical++)
 		{
@@ -116,27 +116,46 @@ namespace primitives
 			}
 			for (int horizontal = 0; horizontal < localHorizontalRes; horizontal++)
 			{
+				maths::vec3f position = maths::vec3f(cosf(horizontalRadianStep * horizontal) * localRadius, sinf(horizontalRadianStep * horizontal) * localRadius, cosf(verticalRadianStep * vertical));
 				primitive->vertices.push_back(Vertex(
-					maths::vec3f(cosf(horizontalRadianStep * horizontal) * localRadius, sinf(horizontalRadianStep * horizontal) * localRadius, 1 - 2 * ((float)vertical/verticalResolution)),
-					maths::vec3f(0, 0, 1),
+					position,
+					maths::vec3f::normalise(position),
 					maths::vec2f(0, 0)
 				));
 			}
 		}
 		// top triangle fan
-		for (int vertex = 0; vertex < horizontalResolution; vertex++)
+		for (int vertex = 0; vertex < horizontalResolution - 1; vertex++)
 		{
 			primitive->faces.push_back(Face(
 				0, vertex + 1, vertex + 2
 			));
 		}
+		// close top triangle fan
+		primitive->faces.push_back(Face(0, horizontalResolution, 1));
+		// rest of the triangulation
+		for (int crossSection = 0; crossSection < verticalResolution - 3; crossSection++)
+		{
+			for (int vertex = 0; vertex < horizontalResolution - 1; vertex++)
+			{
+				unsigned int startingVertex = crossSection * horizontalResolution + 1 + vertex;
+				primitive->faces.push_back(Face(startingVertex, startingVertex + 1, startingVertex + 1 + horizontalResolution));
+				primitive->faces.push_back(Face(startingVertex, startingVertex + horizontalResolution, startingVertex + 1 + horizontalResolution));
+			}
+			primitive->faces.push_back(Face((crossSection + 1) * horizontalResolution, crossSection * horizontalResolution + 1, (crossSection + 1) * horizontalResolution + 1));
+			primitive->faces.push_back(Face((crossSection + 1) * horizontalResolution, (crossSection + 2) * horizontalResolution, (crossSection + 1) * horizontalResolution + 1));
+		}
 		// bottom triangle fan
-		for (int vertex = 0; vertex < horizontalResolution; vertex++)
+		for (int vertex = 0; vertex < horizontalResolution - 1; vertex++)
 		{
 			primitive->faces.push_back(Face(
-				primitive->vertices.size() - 1, primitive->vertices.size() - 2 - vertex, primitive->vertices.size() - 3 - vertex
+				primitive->vertices.size() - 1, primitive->vertices.size() - horizontalResolution + vertex - 1, primitive->vertices.size() - horizontalResolution + vertex
 			));
 		}
+		// close bottom triangle fan
+		primitive->faces.push_back(Face(primitive->vertices.size() - 1, primitive->vertices.size() - 2, primitive->vertices.size() - horizontalResolution - 1));
+
+		primitive->setup();
 
 		Mesh* mesh = new Mesh();
 		mesh->primitives.push_back(primitive);
