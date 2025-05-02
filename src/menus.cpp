@@ -96,6 +96,26 @@ namespace menus
 				ImGui::CloseCurrentPopup();
 				scene->add_object(primitives::sphere(scene, "sphere", 32, 17));
 			}
+			if (ImGui::Button("Add Ambient Light"))
+			{
+				ImGui::CloseCurrentPopup();
+				scene->add_object(new AmbientLight(scene, "ambient light"));
+			}
+			if (ImGui::Button("Add Point Light"))
+			{
+				ImGui::CloseCurrentPopup();
+				scene->add_object(new PointLight(scene, "point light"));
+			}
+			if (ImGui::Button("Add Spotlight"))
+			{
+				ImGui::CloseCurrentPopup();
+				scene->add_object(new Spotlight(scene, "spotlight"));
+			}
+			if (ImGui::Button("Add Directional Light"))
+			{
+				ImGui::CloseCurrentPopup();
+				scene->add_object(new DirectionalLight(scene, "directional light"));
+			}
 			ImGui::EndPopup();
 		}
 		ImGui::SameLine();
